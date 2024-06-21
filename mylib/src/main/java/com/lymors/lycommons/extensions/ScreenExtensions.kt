@@ -15,8 +15,10 @@ import android.os.Parcelable
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.provider.Settings
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import android.widget.Toast
@@ -25,8 +27,11 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewbinding.ViewBinding
@@ -36,6 +41,41 @@ import com.lymors.lycommons.utils.MyPermissionHelper
 import nl.joery.animatedbottombar.AnimatedBottomBar
 
 object ScreenExtensions {
+
+    inline fun <reified MB : ViewBinding, CB : ViewBinding> AppCompatActivity.addCardViewToCenter(
+        mainActivityBinding: MB,
+        crossinline cardViewInflater: (LayoutInflater) -> CB
+    ) {
+        val inflater = LayoutInflater.from(this)
+        val cardViewBinding = cardViewInflater.invoke(inflater)
+
+        // Create a new CardView
+        val cardView = CardView(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.CENTER
+            }
+            radius = 16f
+            setCardBackgroundColor(ContextCompat.getColor(context, R.color.black))
+            cardElevation = 8f
+
+            // Remove the view from its current parent if it has one
+            (cardViewBinding.root.parent as? ViewGroup)?.removeView(cardViewBinding.root)
+
+            // Add the card content to the CardView
+            addView(cardViewBinding.root)
+        }
+
+        // Remove the CardView from its current parent if it has one
+        (cardView.parent as? ViewGroup)?.removeView(cardView)
+
+        // Add the CardView to the root layout of the parent binding
+        (mainActivityBinding.root as ViewGroup).addView(cardView)
+    }
+
+
 
     var AppCompatActivity.myPermissionHelper: MyPermissionHelper
         get() = MyPermissionHelper(this)
@@ -122,12 +162,6 @@ object ScreenExtensions {
 
 
 
-    fun Activity.launchActivity(destination: Class<*>) {
-        // Create an Intent to launch the target activity
-        val intent = Intent(this, destination::class.java)
-        // Start the activity with the created Intent
-        startActivity(intent)
-    }
 
 
     fun Activity.launchActivity(destination: Class<*>, key: String = "", data: Parcelable? = null) {

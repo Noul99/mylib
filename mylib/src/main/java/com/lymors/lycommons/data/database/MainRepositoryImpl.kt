@@ -8,7 +8,6 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.GenericTypeIndicator
 import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
-import com.lymors.lycommons.R
 import com.lymors.lycommons.utils.MyExtensions.logT
 import com.lymors.lycommons.utils.MyExtensions.shrink
 import com.lymors.lycommons.utils.MyResult
@@ -101,7 +100,6 @@ class MainRepositoryImpl @Inject constructor(
 
 
 
-
     override suspend fun <T : Any> uploadAnyModel(path: String, model: T): MyResult<String> {
         path.logT("uploadAnyModel->path","path")
         return try {
@@ -109,7 +107,7 @@ class MainRepositoryImpl @Inject constructor(
             if (keyProperty != null) {
                 keyProperty.isAccessible = true
                 val key = keyProperty.call(model)?.toString() ?: ""
-                val updatedKey = key.ifEmpty {
+                val newKey = key.ifEmpty {
                     databaseReference.push().key.toString().also { newKey ->
                         if (keyProperty is KMutableProperty<*>) {
                             (keyProperty as KMutableProperty<*>).setter.call(model, newKey)
@@ -118,11 +116,11 @@ class MainRepositoryImpl @Inject constructor(
                         }
                     }
                 }
-                databaseReference.child(path).child(updatedKey).setValue(model.shrink())
-                MyResult.Success(if (key.isEmpty()) updatedKey else "Updated")
+                databaseReference.child(path).child(newKey).setValue(model.shrink())
+                MyResult.Success(newKey)
             } else {
                 databaseReference.child(path).setValue(model)
-                MyResult.Success("Success")
+                MyResult.Success(path.split("/").last())
             }
 
 

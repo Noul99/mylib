@@ -1,10 +1,27 @@
 package com.lymors.lycommons.data.viewmodels
 
 
+import android.content.Context
+import android.content.Intent
+import androidx.core.net.toUri
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.Constraints
+import androidx.work.Data
+import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.lymors.lycommons.data.database.MainRepository
+import com.lymors.lycommons.extensions.ImageViewExtensions.uploadImageUsingWorkManager
+import com.lymors.lycommons.utils.FirebaseUploadWorker
+import com.lymors.lycommons.utils.MyExtensions.logT
 import com.lymors.lycommons.utils.MyResult
+import com.lymors.lycommons.utils.Utils.saveImageToInternalStorage
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,6 +30,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import kotlin.coroutines.resume
+import kotlin.reflect.KProperty
 
 
 class MainViewModel @Inject constructor(private val mainRepo: MainRepository) : ViewModel() {
@@ -79,6 +97,8 @@ class MainViewModel @Inject constructor(private val mainRepo: MainRepository) : 
         }
     }
 
+
+
     suspend fun  getMap(child: String): MyResult<Map<String, String>> {
         return mainRepo.getMap(child)
     }
@@ -112,17 +132,35 @@ class MainViewModel @Inject constructor(private val mainRepo: MainRepository) : 
         _searchingState.value = searching
     }
 
-    fun <T> collectAModel(path: String, clazz: Class<T>): StateFlow<T> {
-        val _aModelState = MutableStateFlow<T>(null as T) // Initialize with null
-        val aModelState: StateFlow<T> = _aModelState.asStateFlow()
+    fun <T> collectSingleModel(path: String, clazz: Class<T>): StateFlow<T> {
+        val _singleModelState = MutableStateFlow(null as T) // Initialize with null
+        val aModelState: StateFlow<T> = _singleModelState.asStateFlow()
 
         viewModelScope.launch {
             mainRepo.collectAModel(path, clazz).collect { model ->
-                _aModelState.value = model // Update value
+                _singleModelState.value = model // Update value
             }
         }
         return aModelState
     }
+
+    suspend fun <P> uploadModelWithImage(context: Context, realTimePath: String, model: Any, imageUri: String, property: KProperty<P>): MyResult<String> {
+        return viewModelScope.async {
+            val modelKeyResult = uploadAnyModel(realTimePath, model)
+            if (modelKeyResult is MyResult.Error) {
+                return@async modelKeyResult // Return the error result immediately
+            }
+
+           modelKeyResult.whenSuccess {
+                val imagePath = "$realTimePath/$it/${property.name}"
+               uploadImageUsingWorkManager(context, imageUri, imagePath)
+            }
+            return@async MyResult.Success("Data uploaded successfully")
+        }.await()
+    }
+
+
+
 }
 
 

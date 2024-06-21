@@ -6,6 +6,7 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.app.Activity
+import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Context
@@ -14,7 +15,9 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
+import android.text.Editable
 import android.text.InputType
+import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -27,8 +30,10 @@ import android.view.animation.RotateAnimation
 import android.view.animation.ScaleAnimation
 import android.view.animation.TranslateAnimation
 import android.view.inputmethod.InputMethodManager
+import android.widget.Button
 import android.widget.DatePicker
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.TimePicker
@@ -37,6 +42,11 @@ import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.textfield.TextInputEditText
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -45,6 +55,98 @@ import java.util.Locale
 object ViewExtensions {
 
 
+
+    fun TextView.attachValueEditor(onTextChanged: (String) -> Unit) {
+        this.setOnClickListener {
+            val dialogLayout = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(40,40,40,40)
+            }
+
+            val dialog = AlertDialog.Builder(context)
+                .setView(dialogLayout)
+                .create()
+
+            val editText = EditText(context).apply {
+                if (this@attachValueEditor.text == "0"){
+                    setText("")
+                }else{
+                    setText(this@attachValueEditor.text.toString().trim())
+                }
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            }
+            dialogLayout.addView(editText)
+
+            // Create a horizontal LinearLayout for the buttons
+            val buttonLayout = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            }
+
+            // Create the Cancel button
+            val buttonCancel = Button(context).apply {
+                text = "Cancel"
+                setOnClickListener {
+                    dialog.dismiss()
+                }
+            }
+            buttonLayout.addView(buttonCancel)
+
+            // Create the View
+            // Add a spacer view to separate the buttons
+            val spacerView = View(context).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    1,
+                    1f // weight to distribute the space evenly
+                )
+            }
+            buttonLayout.addView(spacerView)
+
+            // Create the OK button
+            val buttonOk = Button(context).apply {
+                text = "OK"
+                setOnClickListener {
+                    val newText = editText.text.toString().trim()
+                    this@attachValueEditor.text = newText
+                    onTextChanged.invoke(newText)
+                    dialog.dismiss()
+                }
+            }
+            buttonLayout.addView(buttonOk)
+
+            // Add the button layout to the dialog layout
+            dialogLayout.addView(buttonLayout)
+            dialog.show()
+
+        }
+    }
+
+
+
+    fun View.animateLikeBellRinging() {
+        CoroutineScope(Dispatchers.Default).launch {
+            RotateAnimation(
+                -10f, 10f,
+                Animation.RELATIVE_TO_SELF, 0.5f,
+                Animation.RELATIVE_TO_SELF, 0.5f
+            ).apply {
+                duration = 60
+                repeatCount = 10
+                repeatMode = Animation.REVERSE
+                withContext(Dispatchers.Main) {
+                    startAnimation(this@apply)
+                    postDelayed({ clearAnimation() }, duration * repeatCount * 2L)
+                }
+            }
+        }
+    }
 
 
     fun TextView.setBold() {
@@ -99,6 +201,32 @@ object ViewExtensions {
         params.width = width
         layoutParams = params
     }
+
+    fun View.setMarginBottom(bottom: Int){
+        val layoutParams = layoutParams as ViewGroup.MarginLayoutParams
+        layoutParams.bottomMargin = bottom
+        this.layoutParams = layoutParams
+    }
+
+    fun View.setMarginTop(top: Int){
+        val layoutParams = layoutParams as ViewGroup.MarginLayoutParams
+        layoutParams.topMargin = top
+        this.layoutParams = layoutParams
+    }
+
+    fun View.setMarginLeft(left: Int){
+        val layoutParams = layoutParams as ViewGroup.MarginLayoutParams
+        layoutParams.leftMargin = left
+        this.layoutParams = layoutParams
+    }
+
+    fun View.setMarginRight(right: Int) {
+        val layoutParams = layoutParams as ViewGroup.MarginLayoutParams
+        layoutParams.rightMargin = right
+        this.layoutParams = layoutParams
+    }
+
+
 
     fun View.setMargins(left: Int, top: Int, right: Int, bottom: Int) {
         val params = layoutParams as ViewGroup.MarginLayoutParams
@@ -613,6 +741,25 @@ object ViewExtensions {
 
     }
 
+    fun TextInputEditText.capitalizeFirstLetter() {
+        this.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+                s?.let {
+                    if (it.isNotEmpty() && Character.isLowerCase(it[0])) {
+                        it.replace(0, 1, it[0].toUpperCase().toString())
+                    }
+                }
+            }
+        })
+    }
+
+
     fun View.showSnackbar(message: String) {
         Snackbar.make(this, message, Snackbar.LENGTH_SHORT).show()
     }
@@ -817,8 +964,16 @@ object ViewExtensions {
     }
 
 
+    fun View.setVisible() {
+        visibility = View.VISIBLE
+    }
+    fun View.setInvisible() {
+        visibility = View.INVISIBLE
+    }
 
-
+    fun View.setGone() {
+        visibility = View.GONE
+    }
 
     fun View.setVisibleOrInvisible(visible: Boolean) {
         visibility = if (visible) View.VISIBLE else View.INVISIBLE

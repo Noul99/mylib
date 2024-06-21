@@ -15,11 +15,11 @@ import javax.inject.Inject
 class StorageViewModel @Inject constructor(private val storageRepository: StorageRepository) : ViewModel() {
 
     // fire base storage
-    suspend fun uploadImageToFirebaseStorage(uri: Uri , name:String): MyResult<String> {
+    suspend fun uploadImageToFirebaseStorage(uri: Uri): MyResult<String> {
 
         return withContext(Dispatchers.IO){storageRepository.uploadImageToFirebaseStorageWithUri(uri )}
     }
-    suspend fun uploadImageToFirebaseStorage(bitmap: Bitmap , name: String): MyResult<String> {
+    suspend fun uploadImageToFirebaseStorage(bitmap: Bitmap ): MyResult<String> {
         return withContext(Dispatchers.IO){storageRepository.uploadImageToFirebaseStorageWithBitmap(bitmap )}
     }
     suspend fun deleteImageToFirebaseStorage(url: String): MyResult<String> {

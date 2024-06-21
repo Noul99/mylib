@@ -25,6 +25,7 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import androidx.core.text.HtmlCompat
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
@@ -101,25 +102,72 @@ object TextEditTextExtensions {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
                 callback(s.toString())
+
+
             }
         })
     }
 
-    fun TextInputEditText.onTextChange(callback: (String) -> Unit){
-        this.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(
-                s: CharSequence?,
-                start: Int,
-                count: Int,
-                after: Int
-            ) {
+
+    fun TextInputEditText.attachCNICValidation( textInputLayout: TextInputLayout) {
+        addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // No action needed before text changes
             }
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) {
-                callback(s.toString())
+
+            @SuppressLint("SetTextI18n")
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val text = s.toString()
+
+                if (text.length < 15) {
+                    textInputLayout.error = "Invalid CNIC number"
+                } else {
+                    textInputLayout.error = null
+                }
+
+                if (count == 1 && (text.length == 6 || text.length == 14)) {
+                    setText(
+                        text.substring(
+                            0,
+                            text.length - 1
+                        ) + "-" + text[text.length - 1]
+                    )
+                    setSelection(text?.length ?: 0) // Move cursor to end
+                }
+            }
+
+            override fun afterTextChanged(editable: Editable?) {
+                // No action needed after text changes
             }
         })
     }
+
+
+    fun formatValueInPKR(value: Int): String {
+        val amount = value.toString()
+        var currency = ""
+
+        for ((index, digit) in amount.reversed().withIndex()) {
+            if (index == 3) {
+                currency += ","
+            }
+            if (index == 5) {
+                currency += ","
+            }
+            if (index == 7) {
+                currency += ","
+            }
+            if (index == 9) {
+                currency += ","
+            }
+            if (index == 11) {
+                currency += ","
+            }
+            currency += digit
+        }
+        return currency.reversed() + " PKR"
+    }
+
 
 
 
@@ -372,6 +420,12 @@ object TextEditTextExtensions {
             }
         })
     }
+
+
+
+
+
+
     fun EditText.showKeyboardForce() {
         this.requestFocus()
         val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager

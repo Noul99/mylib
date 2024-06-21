@@ -1,29 +1,30 @@
+
 package com.lymors.commonslib
 
 
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat.getDrawable
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.viewbinding.ViewBinding
 import com.lymors.commonslib.MyUtils.dialogUtil
-import com.lymors.commonslib.databinding.ActivityMainBinding
+import com.lymors.commonslib.databinding.FragmentTestBinding
 import com.lymors.commonslib.databinding.NewUserBinding
 import com.lymors.commonslib.databinding.StudentSampleRowBinding
 import com.lymors.lycommons.data.viewmodels.MainViewModel
 import com.lymors.lycommons.extensions.ImageViewExtensions.loadImageFromUrl
 import com.lymors.lycommons.extensions.ImageViewExtensions.pickImageInDialog
 import com.lymors.lycommons.extensions.ImageViewExtensions.registerLauncherForImageResult
-import com.lymors.lycommons.extensions.ScreenExtensions.addCardViewToCenter
 import com.lymors.lycommons.extensions.ScreenExtensions.pickedImageUri
-import com.lymors.lycommons.extensions.ScreenExtensions.replaceFragment
 import com.lymors.lycommons.extensions.ScreenExtensions.showToast
+import com.lymors.lycommons.extensions.ScreenExtensions.viewBinding
 import com.lymors.lycommons.extensions.TextEditTextExtensions.onTextChange
 import com.lymors.lycommons.extensions.ViewExtensions.attachDatePicker
 import com.lymors.lycommons.extensions.ViewExtensions.setVisibleOrGone
@@ -33,14 +34,8 @@ import com.lymors.lycommons.utils.MyExtensions.hideSoftKeyboard
 import com.lymors.lycommons.utils.MyExtensions.logT
 import com.lymors.lycommons.utils.MyExtensions.setOptions
 import com.lymors.lycommons.utils.MyExtensions.showSoftKeyboard
-import com.lymors.lycommons.utils.MyExtensions.shrink
-import com.lymors.lycommons.utils.MyExtensions.viewBinding
-import com.lymors.lycommons.utils.Utils.allProperties
-import com.lymors.lycommons.utils.Utils.attachDataOnViews
-import com.lymors.lycommons.utils.Utils.findId
 import com.lymors.lycommons.utils.Utils.hideSoftKeyboard
 import com.lymors.lycommons.utils.Utils.setData
-import com.lymors.lycommons.utils.Utils.setDataToView
 import com.lymors.lycommons.utils.Utils.showCustomLayoutDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -50,7 +45,7 @@ import javax.inject.Inject
 
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class TestFragment : Fragment() {
 
     private var listOfSelectedViews = arrayListOf<View>()
     // change your model
@@ -64,16 +59,14 @@ class MainActivity : AppCompatActivity() {
 
 
 
-    private val binding by viewBinding(ActivityMainBinding::inflate)
+    private val binding by viewBinding(FragmentTestBinding::inflate)
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        imagePicker = ImageView(this)
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        imagePicker = ImageView(requireActivity())
         "onCreate".logT()
-        registerLauncherForImageResult()
-
-        addCardViewToCenter(ActivityMainBinding.inflate(layoutInflater),NewUserBinding::inflate)
-        setContentView(binding.root)
 
         lifecycleScope.launch {
             mainViewModel.collectAnyModels("users" , UserModel::class.java , 10).collect { users ->
@@ -94,8 +87,9 @@ class MainActivity : AppCompatActivity() {
 
 
 
+
         binding.searchVew.onTextChange { query ->
-            // filter by searchView
+            // filter by searchview
             var filteredList = allUsers.filter {it.name.contains(query, ignoreCase = true) }
             setUpRecyclerView(filteredList)
         }
@@ -105,13 +99,8 @@ class MainActivity : AppCompatActivity() {
 
 
         binding.floating.setOnClickListener {
-//            binding.floating.setVisibleOrInvisible(false)
-//            // load fragment
-//            binding.recyclerview.setVisibleOrInvisible(false)
-//            binding.frame.setVisibleOrInvisible(true)
 
-//        replaceFragment(findViewById<FrameLayout>(R.id.frame).id,TestFragment())
-//        replaceFragment(binding.frame.id,TestFragment())
+
 
 //            val dialog = CustomDialogFragment()
 //            dialog.show(supportFragmentManager, "CustomDialogFragment")
@@ -128,28 +117,28 @@ class MainActivity : AppCompatActivity() {
             mainViewModel.setSearchingState(true)
         }
 
-     
+return binding.root
     }
 
-    override fun onBackPressed() {
-
-        if (mainViewModel.searchingState.value){
-            mainViewModel.setSearchingState(false)
-        }
-        else if (mainViewModel.longClickedState.value){
-            resetViews()
-        }else{
-            super.onBackPressed()
-            finishAffinity()
-        }
-    }
+//    override fun onBackPressed() {
+//
+//        if (mainViewModel.searchingState.value){
+//            mainViewModel.setSearchingState(false)
+//        }
+//        else if (mainViewModel.longClickedState.value){
+//            resetViews()
+//        }else{
+//            super.onBackPressed()
+//            finishAffinity()
+//        }
+//    }
 
     private fun handleSearchState() {
 //        change the right bottom button on the soft keyboard
         binding.searchVew.setOnEditorActionListener(TextView.OnEditorActionListener { v, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 // Handle done action and close the keyboard
-                hideSoftKeyboard()
+               requireActivity(). hideSoftKeyboard()
                 return@OnEditorActionListener true
             }
             false
@@ -165,7 +154,7 @@ class MainActivity : AppCompatActivity() {
                     searchIcon.setVisibleOrGone(!isSearching)
                     title.setVisibleOrGone(!isSearching)
                     if (isSearching) {
-                        pickedImageUri
+                       requireActivity(). pickedImageUri
                         searchVew.showSoftKeyboard()
                     } else {
                         binding.searchVew.setText("")
@@ -199,7 +188,7 @@ class MainActivity : AppCompatActivity() {
     private fun handleDeleteItems() {
         binding.delete.setOnClickListener {
             // surety dialog
-            dialogUtil.showInfoDialog(this,"Are you sure you want to delete selected items?","be care full your are gong to delete ${listOfSelectedItems.size} items","Delete","Cancel",false,object :DialogUtil.DialogClickListener{
+            dialogUtil.showInfoDialog(requireActivity(),"Are you sure you want to delete selected items?","be care full your are gong to delete ${listOfSelectedItems.size} items","Delete","Cancel",false,object :DialogUtil.DialogClickListener{
                 override fun onClickNo(d: DialogInterface) {
                     dialogUtil.dialog.dismiss()
                 }
@@ -211,7 +200,7 @@ class MainActivity : AppCompatActivity() {
                             withContext(Dispatchers.Main){
                                 val result = mainViewModel.deleteAnyModel("users/${it.key}")
 
-                                result.showInToast(this@MainActivity)
+                                result.showInToast(requireActivity())
                             }
                         }
                         resetViews()
@@ -233,7 +222,7 @@ class MainActivity : AppCompatActivity() {
                 resetViews()
             }
             else {
-                this@MainActivity.onBackPressed()
+                requireActivity().onBackPressed()
             }
         }
     }
@@ -250,26 +239,23 @@ class MainActivity : AppCompatActivity() {
     private fun setUpRecyclerView(users : List<UserModel> , pageSize : Int = 20) {
 
 
+
         binding.recyclerview.setData(users,null, pageSize ,  StudentSampleRowBinding::inflate , { b, item, position ->
-
+            b.profileImage.loadImageFromUrl(item.profileImage)
+            b.name.text = item.name
+            b.phone.text = item.phone
             b.birth.text = position.toString()
-//
-
-//            b.profileImage.loadImageFromUrl(item.profileImage)
-//            b.name.text = item.name
-//            b.phone.text = item.phone
-//            b.birth.text = position.toString()
 
             if (item in listOfSelectedItems){
                 // if item is selected then set the background
-                b.cardView.background = getDrawable(this@MainActivity, com.lymors.lycommons.R.drawable.selected_background)
+                b.cardView.background = getDrawable(requireActivity(), com.lymors.lycommons.R.drawable.selected_background)
             }else{
                 b.cardView.background = null
             }
 
             b.cardView.setOnLongClickListener { view ->
 
-                b.cardView.background = getDrawable(this@MainActivity, com.lymors.lycommons.R.drawable.selected_background)
+                b.cardView.background = getDrawable(requireActivity(), com.lymors.lycommons.R.drawable.selected_background)
                 listOfSelectedViews.add(view)
                 listOfSelectedItems.add(item)
 
@@ -290,7 +276,7 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         listOfSelectedItems.add(item)
                         listOfSelectedViews.add(it)
-                        b.cardView.background = getDrawable(this@MainActivity, com.lymors.lycommons.R.drawable.selected_background)
+                        b.cardView.background = getDrawable(requireActivity(), com.lymors.lycommons.R.drawable.selected_background)
                     }
                     if (listOfSelectedItems.size==1){
                         binding.update.setVisibleOrGone(true)
@@ -298,14 +284,14 @@ class MainActivity : AppCompatActivity() {
                         binding.update.setVisibleOrGone(false)
                     }
                 }else{
-                    var intent = Intent(this@MainActivity , SecondActivity::class.java)
+                    var intent = Intent(requireActivity() , SecondActivity::class.java)
                     intent.putExtra("data","data")
                     startActivity(intent)
                 }
             }
         },{ more->
             lifecycleScope.launch {
-               var d =  dialogUtil.showProgressDialog(this@MainActivity , "Loading...")
+                var d =  dialogUtil.showProgressDialog(requireActivity() , "Loading...")
 
                 more.logT("more")
                 // change you model here
@@ -313,8 +299,8 @@ class MainActivity : AppCompatActivity() {
                     allUsers = users
                     users.logT("load more")
                     if (users.isNotEmpty()){
-                    d.dismiss()
-                    setUpRecyclerView( allUsers.reversed() , more)
+                        d.dismiss()
+                        setUpRecyclerView( allUsers.reversed() , more)
                     }
                 }
             }
@@ -322,11 +308,9 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-
-
     private fun showNewUserDialog(title:String = "", userModel: UserModel = UserModel()) {
 
-        showCustomLayoutDialog(this, NewUserBinding::inflate) { dialogBinding, dialogFragment ->
+        showCustomLayoutDialog(requireActivity(), NewUserBinding::inflate) { dialogBinding, dialogFragment ->
             dialogBinding.apply {
 //                title.setTextOrGone(title)
                 name.setText(userModel.name)
@@ -344,7 +328,7 @@ class MainActivity : AppCompatActivity() {
 //                }
 
                 profileImage.pickImageInDialog {
-                    profileImage.setImageURI(pickedImageUri)
+                    profileImage.setImageURI(requireActivity().pickedImageUri)
                 }
 
                 cancelBtn.setOnClickListener { dialogUtil.dialog.dismiss() }
@@ -360,8 +344,8 @@ class MainActivity : AppCompatActivity() {
                     var u = UserModel(userModel.key, name, phone, gender, birth,"")
 
                     lifecycleScope.launch {
-                        mainViewModel.uploadModelWithImage(this@MainActivity , "users", u, pickedImageUri.toString(),UserModel::profileImage)
-                            }
+                        mainViewModel.uploadModelWithImage(requireActivity() , "users", u, requireActivity().pickedImageUri.toString(),UserModel::profileImage)
+                    }
                 }
             }
             dialogBinding.cancelBtn.setOnClickListener {
@@ -369,8 +353,8 @@ class MainActivity : AppCompatActivity() {
                 dialogFragment.dismiss()
             }
 
-                // Handle save action
-            }
+            // Handle save action
+        }
 
 
 

@@ -2,6 +2,7 @@ package com.lymors.lycommons.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.datastore.preferences.core.PreferencesSerializer.defaultValue
 
 class SharedPreferencesHelper(context: Context) {
 
@@ -34,6 +35,7 @@ class SharedPreferencesHelper(context: Context) {
     fun getBoolean(key: String, defaultValue: Boolean = false): Boolean {
         return sharedPreferences.getBoolean(key, defaultValue)
     }
+
 
     // Add more methods for other data types as needed
 }

@@ -14,7 +14,7 @@
         android:orientation="horizontal">
 
         <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/image1"
+            android:id="@+id/profileImage"
             android:layout_width="65dp"
             android:layout_height="65dp"
             android:layout_margin="@dimen/_7sdp"
@@ -32,7 +32,7 @@
 
 
             <TextView
-                android:id="@+id/myname"
+                android:id="@+id/name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginVertical="@dimen/_2sdp"
@@ -73,7 +73,7 @@
 
 
             <TextView
-                android:id="@+id/feeNumber"
+                android:id="@+id/birth"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
@@ -84,7 +84,7 @@
                 android:layout_marginBottom="@dimen/_5sdp"
                 android:paddingHorizontal="@dimen/_5sdp"
                 android:singleLine="true"
-                android:text="RS : 20,000"
+                android:text="birth"
                 android:textColor="@color/black"
                 android:textSize="15sp"
                 android:textStyle="normal" />

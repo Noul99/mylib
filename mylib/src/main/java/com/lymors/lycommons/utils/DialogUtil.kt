@@ -5,6 +5,7 @@ import android.app.ActionBar.LayoutParams
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.Dialog
+import android.app.ProgressDialog
 import android.content.Context
 import android.content.DialogInterface
 import android.content.res.ColorStateList
@@ -51,7 +52,12 @@ class DialogUtil {
     }
 
 
-    fun showAlertDialogRounded(context: Context,title: String, message: String, cancelable: Boolean = false) {
+    fun showAlertDialogRounded(
+        context: Context,
+        title: String,
+        message: String,
+        cancelable: Boolean = false
+    ) {
         val alertDialogBuilder = MaterialAlertDialogBuilder(context)
         alertDialogBuilder.setTitle(title)
         alertDialogBuilder.setMessage(message)
@@ -69,10 +75,11 @@ class DialogUtil {
     }
 
 
-    inline fun <reified T : ViewBinding> showCustomLayoutDialog(context: Activity,
-         crossinline bindingInflater: (LayoutInflater) -> T,
-         cancelable: Boolean = true ,
-         callback: (T, Dialog ) -> Unit
+    inline fun <reified T : ViewBinding> showCustomLayoutDialog(
+        context: AppCompatActivity,
+        crossinline bindingInflater: (LayoutInflater) -> T,
+        cancelable: Boolean = true,
+        callback: (T, Dialog) -> Unit
     ): Dialog {
         val binding = bindingInflater.invoke((context).layoutInflater)
         dialog = MaterialAlertDialogBuilder(context)
@@ -80,18 +87,26 @@ class DialogUtil {
             .setCancelable(cancelable)
             .show()
 
+
         // Set the dialog background to white
-        dialog.window?.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.rounderd_corner))
+        dialog.window?.setBackgroundDrawable(
+            ContextCompat.getDrawable(
+                context,
+                R.drawable.rounderd_corner
+            )
+        )
 
         val width = (context.resources.displayMetrics.widthPixels * 0.9).toInt()
         dialog.window?.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
-        callback.invoke( binding , dialog)
+        callback.invoke(binding, dialog)
         return dialog
     }
 
 
 
-    inline fun <reified T : ViewBinding> showCustomLayoutDialog(context: Activity,
+
+    inline fun <reified T : ViewBinding> showCustomLayoutDialog(
+        context: Activity,
         crossinline bindingInflater: (LayoutInflater) -> T,
         cancelable: Boolean = true
     ): T {
@@ -102,7 +117,12 @@ class DialogUtil {
             .show()
 
         // Set the dialog background to white
-        dialog.window?.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.rounderd_corner))
+        dialog.window?.setBackgroundDrawable(
+            ContextCompat.getDrawable(
+                context,
+                R.drawable.rounderd_corner
+            )
+        )
 
         val width = (context.resources.displayMetrics.widthPixels * 0.9).toInt()
         dialog.window?.setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -110,8 +130,13 @@ class DialogUtil {
     }
 
 
-    fun showAlertDialog(context: Context,title: String, message: String, cancelable: Boolean = false) {
-        val alertDialogBuilder = createAlertDialog(context,title, message, cancelable)
+    fun showAlertDialog(
+        context: Context,
+        title: String,
+        message: String,
+        cancelable: Boolean = false
+    ) {
+        val alertDialogBuilder = createAlertDialog(context, title, message, cancelable)
         alertDialogBuilder.setPositiveButton("OK") { dialog, _ ->
             dialog.dismiss()
         }
@@ -132,7 +157,7 @@ class DialogUtil {
         cancelable: Boolean,
         obj: DialogClickListener
     ) {
-        val alertDialogBuilder = createAlertDialog(context , title, message, cancelable)
+        val alertDialogBuilder = createAlertDialog(context, title, message, cancelable)
         alertDialogBuilder.setPositiveButton(positiveButtonLabel) { dialog, _ ->
             obj.onClickYes(dialog)
         }
@@ -153,7 +178,7 @@ class DialogUtil {
         obj: EditTextDialogClickListener
     ) {
         val textFields = ArrayList<String>()
-        val dialog = createAlertDialog(context,"", "")
+        val dialog = createAlertDialog(context, "", "")
         val verticalLinearLayout =
             createLinearLayout(context, LinearLayout.VERTICAL, Gravity.CENTER)
 
@@ -282,27 +307,23 @@ class DialogUtil {
     }
 
 
-
-
-    fun showProgressDialog(context: Context, message: String , cancelable: Boolean = true , transparent: Boolean = false , progressColor: Int =  R.color.gray50 ): Dialog {
-        var progressDialog = Dialog(context)
+    fun showProgressDialog(
+        context: Context,
+        message: String,
+        cancelable: Boolean = true,
+        transparent: Boolean = false,
+        progressColor: Int = R.color.gray50
+    ): Dialog {
+        var progressDialog = ProgressDialog(context)
         if (transparent) {
             progressDialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         }
         progressDialog.setCancelable(cancelable)
-        val view = LayoutInflater.from(context).inflate(R.layout.progress_dialog, null)
-        val messageTextView = view.findViewById<TextView>(R.id.messageTextView)
-        val progress = view.findViewById<ProgressBar>(R.id.progressBar)
-        progress.indeterminateTintList = ColorStateList.valueOf(getColor(context,progressColor))
-        messageTextView.text = message
-
-        progressDialog.setContentView(view)
+        progressDialog.setProgressStyle(R.style.MyDatePickerDialogStyle)
+        progressDialog.setMessage(message)
         progressDialog.show()
         return progressDialog
     }
-
-
-
 
 
 }

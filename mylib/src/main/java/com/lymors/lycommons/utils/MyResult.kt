@@ -16,7 +16,7 @@ sealed class MyResult<out T : Any> {
         }
     }
 
-    fun whenSuccess(onSuccess: (T) -> Unit) {
+    fun whenSuccess(onSuccess: (T) -> Unit ) {
         if (this is Success) {
             onSuccess(data)
         }

@@ -163,6 +163,7 @@ import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 import kotlin.reflect.full.memberProperties
+import kotlin.reflect.jvm.isAccessible
 
 
 object MyExtensions {
@@ -1104,26 +1105,32 @@ object MyExtensions {
         return binding
     }
 
-
+    fun <T> List<T>.toArrayList(): ArrayList<T> {
+        val arrayList = ArrayList<T>()
+        arrayList.addAll(this)
+        return arrayList
+    }
 
 
     fun Any.shrink(): Map<String, Any> {
         val propertiesMap = mutableMapOf<String, Any>()
         this::class.memberProperties.forEach { prop ->
+            prop.isAccessible = true
             val value = prop.getter.call(this)
             when (value) {
-                is Boolean -> if (value) propertiesMap[prop.name] = value
-                is Int -> if (value != 0) propertiesMap[prop.name] = value
-                is Double -> if (value != 0.0) propertiesMap[prop.name] = value
-                is Float -> if (value != 0.0f) propertiesMap[prop.name] = value
-                is Long -> if (value != 0L) propertiesMap[prop.name] = value
                 is String -> if (value.isNotEmpty()) propertiesMap[prop.name] = value
+                is Int -> if (value != 0) propertiesMap[prop.name] = value
+                is Boolean -> if (value) propertiesMap[prop.name] = value
+                is Double -> if (value != 0.0) propertiesMap[prop.name] = value
+                is Long -> if (value != 0L) propertiesMap[prop.name] = value
                 is List<*> -> if (value.isNotEmpty()) propertiesMap[prop.name] = value
+                is Float -> if (value != 0.0f) propertiesMap[prop.name] = value
                 is Short -> if (value != 0.toShort()) propertiesMap[prop.name] = value
                 is Byte -> if (value != 0.toByte()) propertiesMap[prop.name] = value
                 is Char -> if (value != '\u0000') propertiesMap[prop.name] = value // '\u0000' is the null char
                 is Set<*> -> if (value.isNotEmpty()) propertiesMap[prop.name] = value
                 is Map<*, *> -> if (value.isNotEmpty()) propertiesMap[prop.name] = value
+                is View ->  propertiesMap[prop.name] = value
                 is Date -> propertiesMap[prop.name] = value
                 is Any -> if (value::class.isData) propertiesMap[prop.name] = value.shrink()
             }

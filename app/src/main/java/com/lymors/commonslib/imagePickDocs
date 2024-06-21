@@ -1,0 +1,2 @@
+if you want to pick image onCreate of a activity just call View.pickImage and use pickedImageUri
+if you want to pick image in dialog then call View.pickImageInDialog and call

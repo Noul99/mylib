@@ -6,6 +6,14 @@ import kotlin.math.roundToInt
 
 object NumbersExtensions {
 
+    fun String.toDoubleOrDefault(defaultValue: Double): Double {
+        return try {
+            this.toDouble()
+        } catch (e: NumberFormatException) {
+            defaultValue
+        }
+    }
+
 
     fun Int?.roundUpToNearestTen(): Int = ((((this ?: 0) + 5) / 10.0).roundToInt() * 10)
 

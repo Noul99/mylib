@@ -7,7 +7,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
@@ -25,36 +24,188 @@ import android.view.animation.Animation
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.annotation.DimenRes
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
+import androidx.viewpager.widget.PagerAdapter
+import androidx.viewpager.widget.ViewPager
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.lymors.lycommons.R
+import com.lymors.lycommons.extensions.ImageViewExtensions.loadImageFromUrl
 import com.lymors.lycommons.utils.MyExtensions.empty
 import com.lymors.lycommons.utils.MyExtensions.logT
 import com.lymors.lycommons.utils.MyExtensions.showToast
+import com.lymors.lycommons.utils.MyExtensions.shrink
+import com.lymors.lycommons.utils.Utils.allProperties
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.lang.reflect.Modifier
 import java.net.Inet4Address
 import java.net.NetworkInterface
-import java.util.Locale
-import kotlin.reflect.KMutableProperty
-import kotlin.reflect.full.declaredMemberProperties
-import kotlin.reflect.jvm.isAccessible
+import kotlin.reflect.KClass
+import kotlin.reflect.KProperty
+import kotlin.reflect.full.memberProperties
 
 
 object Utils {
+
+    fun setDataToView(view: View?, data: Any?){
+        if (view==null || data==null) return
+        when(view){
+            is EditText -> view.setText(data.toString())
+            is TextView -> view.text = data.toString()
+            is ImageView -> {
+                if (data is String){
+                    view.loadImageFromUrl(data)
+                }else if (data is Int){
+                    view.setImageResource(data)
+                }
+            }
+
+        }
+
+    }
+
+    private val cache = mutableMapOf<KClass<*>, List<String>>()
+    fun getProperties(clazz: KClass<*>): List<String> {
+        return cache.getOrPut(clazz) { clazz.memberProperties.map { it.name } }
+    }
+
+fun Any.allProperties(): List<String> {
+    return getProperties(this::class)
+}
+
+    fun Fragment.findId(viewId: String): View? {
+        val resId = resources.getIdentifier(viewId, "id", requireActivity().packageName)
+        return if (resId != 0) view?.findViewById(resId) else null
+    }
+
+    fun Activity.findId(viewId: String): View? {
+        val resId = resources.getIdentifier(viewId, "id", packageName)
+        return if (resId != 0) findViewById(resId) else null
+    }
+
+
+
+    fun <T : ViewBinding> AppCompatActivity.setupIntroScreens(
+        viewPager: ViewPager,
+        bindingsList: List<(LayoutInflater) -> T>,
+        setupActions: (List<T>) -> Unit
+    ) {
+        val adapter = object : PagerAdapter() {
+            override fun instantiateItem(container: ViewGroup, position: Int): Any {
+                val inflater = LayoutInflater.from(container.context)
+                val binding = bindingsList[position].invoke(inflater)
+                container.addView(binding.root)
+                setupActions.invoke(listOf(binding))
+                return binding.root
+            }
+
+            override fun destroyItem(container: ViewGroup, position: Int, obj: Any) {
+                container.removeView(obj as View)
+            }
+
+            override fun getCount(): Int = bindingsList.size
+
+            override fun isViewFromObject(view: View,obj: Any): Boolean = view == obj
+        }
+
+        viewPager.adapter = adapter
+    }
+
+
+
+    fun Uri.saveImageToInternalStorage(context: Context): Uri? {
+        return try {
+            val inputStream: InputStream? = context.contentResolver.openInputStream(this)
+            val file = File(context.filesDir, "uploaded_image_${System.currentTimeMillis()}.jpg") // Generate a unique file name
+            val outputStream = FileOutputStream(file)
+
+            inputStream?.use { input ->
+                outputStream.use { output ->
+                    input.copyTo(output)
+                }
+            }
+
+            file.toUri()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+
+    fun Uri.uriToByteArray(context: Context): ByteArray? {
+        return try {
+            val inputStream = context.contentResolver.openInputStream(this)
+            val byteBuffer = ByteArrayOutputStream()
+            val buffer = ByteArray(1024)
+            var len: Int
+            while (inputStream?.read(buffer).also { len = it ?: -1 } != -1) {
+                byteBuffer.write(buffer, 0, len)
+            }
+            byteBuffer.toByteArray()
+        } catch (e: IOException) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+
+    fun <B : ViewBinding> showCustomLayoutDialog(
+        activity: FragmentActivity,
+        bindingInflater: (LayoutInflater, ViewGroup?, Boolean) -> B,
+        setupBinding: (B, DialogFragment) -> Unit
+    ):GenericDialogFragment<B> {
+        val dialog = GenericDialogFragment(bindingInflater, setupBinding)
+        dialog.show(activity.supportFragmentManager, "GenericDialogFragment")
+        return dialog
+    }
+
+
+
+    val Activity.sharedPref:SharedPreferencesHelper
+        get() = SharedPreferencesHelper(this)
+
+
+
+//    private fun setDataToViews(view: View, data: Any) {
+//        val propertyNames = data::class.java.declaredFields.map { it.name }
+//
+//        if (view is TextView) {
+//            val viewId = view.resources.getResourceEntryName(view.id)
+//            val matchingProperty = propertyNames.firstOrNull { it.replaceFirstChar { char -> char.toLowerCase() } == viewId.substringAfter("_") }
+//            if (matchingProperty != null) {
+//                val value = data::class.java.getDeclaredField(matchingProperty).apply { isAccessible = true }.get(data)
+//                view.text = value.toString()
+//            }
+//        } else if (view is ViewGroup) {
+//            for (i in 0 until view.childCount) {
+//                setDataToViews(view.getChildAt(i), data)
+//            }
+//        }
+//    }
+
+    fun <P> Any.getPropertyName( propertyReference: KProperty<P>): String {
+        return propertyReference.name
+    }
+
 
 
     fun getIpv4LocalHostAddress(): String {
@@ -239,6 +390,9 @@ object Utils {
     }
 
 
+    /**
+     * this method shows the view with reveal animation
+     */
     fun hideWithRevealAnimation(hideView: View, showView: View) {
         val centerX = (hideView.left + hideView.right) / 2
         val centerY = (hideView.top + hideView.bottom) / 2
@@ -258,6 +412,9 @@ object Utils {
     }
 
 
+    /**
+     *  this method checks the phone number and returns the cleaned number
+     */
     fun processPhoneNumber(phoneNumber: String): String {
         val cleanedNumber = phoneNumber.replace("\\s".toRegex(), "")
         return if (phoneNumber.startsWith("03")) {
@@ -306,6 +463,8 @@ object Utils {
         }
     }
 
+    var timeStamp = 0L
+
 
     /**
     val tabTextList = listOf("Tab 1", "Tab 2", "Tab 3")
@@ -342,6 +501,7 @@ object Utils {
         bindHolder: (binding: VB, item: T, position: Int) -> Unit,
         loadMore: (lastKey:Int) -> Unit,
     ) {
+
         val existingAdapter = this.adapter as? GenericPagingAdapter<T, VB>
         if (items.isNotEmpty()) {
             if (existingAdapter != null) {
@@ -350,6 +510,19 @@ object Utils {
                 val adapter = GenericPagingAdapter(items, animation, bindingInflater, bindHolder, loadMore, pageSize
                 )
                 this.adapter = adapter
+            }
+        }
+    }
+
+    fun attachDataOnViews(
+        bindingInflater: Any,
+        item: Any
+    ) {
+        val  bindingMap = bindingInflater.shrink()
+        val itemMap = item.shrink()
+        item.allProperties().forEach {
+            if (bindingMap[it] != null && itemMap[it] != null) {
+                setDataToView(bindingMap[it] as View, itemMap[it])
             }
         }
     }
@@ -368,37 +541,45 @@ object Utils {
     ) : RecyclerView.Adapter<DataViewHolder<VB>>() {
         private var adapterList: List<T> = items
 
+
+        var bindingMap: Map<String, Any> = mapOf()
+
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DataViewHolder<VB> {
             val layoutInflater = LayoutInflater.from(parent.context)
             val binding = bindingInflater(layoutInflater, parent, false)
-            return DataViewHolder(binding)
+            var viewHolder = DataViewHolder(binding)
+           bindingMap =  viewHolder.binding.shrink()
+
+            return viewHolder
         }
 
         override fun getItemCount(): Int = adapterList.size
 
         override fun onBindViewHolder(holder: DataViewHolder<VB>, position: Int) {
-            position.logT("position" , "position")
+            var item = adapterList[position]
+            var itemMap = item?.shrink()
+            item?.allProperties()?.forEach {
+                if (bindingMap[it] != null && itemMap?.get(it) != null) {
+                    setDataToView(bindingMap[it] as View, itemMap[it])
+                }
+            }
 
             bindHolder(holder.binding, adapterList[position], position)
             animation?.let {
                 holder.itemView.startAnimation(it)
             }
 
-            if (position == adapterList.lastIndex) {
+            if (position == adapterList.lastIndex && adapterList.size >= pageSize && adapterList.isNotEmpty() && System.currentTimeMillis() - timeStamp > 1500) {
+                    timeStamp = System.currentTimeMillis()
                     loadMore(adapterList.size+pageSize)
             }
         }
 
         private val handler = Handler(Looper.getMainLooper())
         fun updateData(newData: List<T>) {
-            newData.logT("updateData")
             handler.post {
-                adapterList.lastIndex.logT("lastIndex//")
-                if (adapterList.size!= newData.size && newData.size>adapterList.size){
                     adapterList = newData
                     notifyDataSetChanged()
-                }
-                adapterList.size.logT("listSize//")
             }
         }
 
@@ -433,7 +614,6 @@ object Utils {
             notifyDataSetChanged()
         }
     }
-
 
     fun <T, VB : ViewBinding> RecyclerView.setData(
         items: List<T>,
@@ -500,17 +680,12 @@ object Utils {
 //    class DataViewHolder<VB : ViewBinding>(val binding: VB) : RecyclerView.ViewHolder(binding.root)
 
 
-
-
-
-
-
-
-
-    fun statusBarColor(context: Activity, color:Int= R.color.blue){
+    /**
+     * this method sets the status bar color
+     */
+    fun setStatusBarColor(context: Activity, color:Int= R.color.blue){
         context.window.statusBarColor= ContextCompat.getColor(context,color)
     }
-
 
 
 
