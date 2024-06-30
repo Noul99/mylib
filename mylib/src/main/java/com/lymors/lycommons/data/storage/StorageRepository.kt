@@ -2,7 +2,6 @@ package com.lymors.lycommons.data.storage
 
 import android.graphics.Bitmap
 import android.net.Uri
-import com.google.zxing.common.BitArray
 import com.lymors.lycommons.utils.MyResult
 
 interface StorageRepository {

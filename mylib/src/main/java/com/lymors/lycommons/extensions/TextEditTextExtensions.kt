@@ -1,12 +1,10 @@
 package com.lymors.lycommons.extensions
 
-import android.R
 import android.annotation.SuppressLint
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
-import android.graphics.drawable.GradientDrawable
 import android.os.CountDownTimer
 import android.text.Editable
 import android.text.InputType

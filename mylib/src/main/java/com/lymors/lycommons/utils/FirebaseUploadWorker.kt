@@ -2,17 +2,11 @@ package com.lymors.lycommons.utils
 
 import android.content.Context
 import android.net.Uri
-import androidx.core.net.toUri
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
-import com.lymors.lycommons.data.viewmodels.StorageViewModel
 import com.lymors.lycommons.utils.MyExtensions.logT
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 class FirebaseUploadWorker(
     context: Context,

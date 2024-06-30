@@ -3,15 +3,8 @@ package com.lymors.lycommons.managers
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import com.lymors.lycommons.utils.MyResult
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.Body
-import retrofit2.http.DELETE
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.PUT
-import retrofit2.http.Path
 
 //    <uses-permission android:name="android.permission.INTERNET" />
 //    implementation 'com.squareup.retrofit2:retrofit:2.9.0'

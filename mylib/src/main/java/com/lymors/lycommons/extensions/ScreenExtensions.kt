@@ -15,7 +15,6 @@ import android.os.Parcelable
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.provider.Settings
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -27,7 +26,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
@@ -39,10 +37,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.lymors.lycommons.R
 import com.lymors.lycommons.utils.MyPermissionHelper
 import nl.joery.animatedbottombar.AnimatedBottomBar
-import org.checkerframework.checker.units.qual.Length
 import java.util.WeakHashMap
-import kotlin.properties.ReadWriteProperty
-import kotlin.reflect.KProperty
 
 object ScreenExtensions {
 

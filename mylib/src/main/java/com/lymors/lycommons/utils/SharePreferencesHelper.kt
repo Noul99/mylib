@@ -2,7 +2,6 @@ package com.lymors.lycommons.utils
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.datastore.preferences.core.PreferencesSerializer.defaultValue
 
 class SharedPreferencesHelper(context: Context) {
 

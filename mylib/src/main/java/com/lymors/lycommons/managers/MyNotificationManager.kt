@@ -11,13 +11,12 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Build
 import androidx.activity.result.ActivityResultLauncher
-import androidx.appcompat.resources.Compatibility.Api18Impl.setAutoCancel
 import androidx.core.app.NotificationCompat
 import androidx.core.app.RemoteInput
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
-import com.lymors.lycommons.broadcastreceiver.AlarmReceiver
 import com.lymors.lycommons.R
+import com.lymors.lycommons.broadcastreceiver.AlarmReceiver
 
 class MyNotificationManager(private val context: Context , requestPermissionLauncher: ActivityResultLauncher<String>?=null) {
 

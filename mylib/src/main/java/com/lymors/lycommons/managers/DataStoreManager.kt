@@ -1,18 +1,16 @@
 package com.lymors.lycommons.managers
 
 import android.content.Context
-import com.lymors.lycommons.utils.MyExtensions.fromJson
-import com.lymors.lycommons.utils.MyExtensions.toJsonString
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.google.gson.Gson
 import com.lymors.lycommons.extensions.StringExtensions.fromJson
+import com.lymors.lycommons.utils.MyExtensions.toJsonString
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 
 class DataStoreManager(var context: Context){
 

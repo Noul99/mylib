@@ -1,17 +1,15 @@
 package com.lymors.lycommons.utils
 
 import android.app.AlertDialog
-import android.app.AppComponentFactory
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import android.view.View
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.fragment.app.FragmentActivity
-import android.widget.ImageView
-import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

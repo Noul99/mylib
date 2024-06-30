@@ -7,11 +7,10 @@ import android.os.Build
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.fragment.app.FragmentActivity
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import com.lymors.lycommons.utils.MyExtensions.showToast
 
 class MyPermissionHelper(var activity: AppCompatActivity) {

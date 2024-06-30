@@ -1,7 +1,6 @@
 package com.lymors.lycommons.data.auth.googleauth
 
 import android.content.Intent
-import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -14,7 +13,6 @@ import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import com.lymors.lycommons.R
 import com.lymors.lycommons.utils.MyResult
 import javax.inject.Inject
 

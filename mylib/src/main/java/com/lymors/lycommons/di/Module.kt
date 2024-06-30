@@ -3,7 +3,6 @@ package com.lymors.lycommons.di
 
 
 import android.content.Context
-import com.lymors.lycommons.data.viewmodels.StorageViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -21,6 +20,7 @@ import com.lymors.lycommons.data.storage.StorageRepository
 import com.lymors.lycommons.data.storage.StorageRepositoryImpl
 import com.lymors.lycommons.data.viewmodels.AuthViewModel
 import com.lymors.lycommons.data.viewmodels.MainViewModel
+import com.lymors.lycommons.data.viewmodels.StorageViewModel
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

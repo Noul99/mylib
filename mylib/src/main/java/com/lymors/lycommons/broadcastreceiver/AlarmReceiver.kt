@@ -5,9 +5,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat.getSystemService
-import com.lymors.lycommons.managers.MyNotificationManager.Companion.alarmNotificationId
 import com.lymors.lycommons.managers.MyAlarmManager
-import com.lymors.lycommons.managers.MyNotificationManager
+import com.lymors.lycommons.managers.MyNotificationManager.Companion.alarmNotificationId
 import java.util.Calendar
 
 class AlarmReceiver:BroadcastReceiver() {

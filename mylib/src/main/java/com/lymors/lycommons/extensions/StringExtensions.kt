@@ -20,7 +20,6 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.WriterException
 import com.google.zxing.common.BitMatrix
-import com.lymors.lycommons.managers.MyClipboardManager
 import com.lymors.lycommons.utils.MyExtensions.empty
 import org.json.JSONArray
 import org.json.JSONObject

@@ -2,7 +2,6 @@ package com.lymors.lycommons.utils
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ClipboardManager
 import android.content.Context
@@ -26,7 +25,6 @@ import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.Animation
 import android.view.inputmethod.InputMethodManager
-import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.FrameLayout
@@ -57,7 +55,6 @@ import com.lymors.lycommons.utils.MyExtensions.empty
 import com.lymors.lycommons.utils.MyExtensions.logT
 import com.lymors.lycommons.utils.MyExtensions.showToast
 import com.lymors.lycommons.utils.MyExtensions.shrink
-import com.lymors.lycommons.utils.Utils.allProperties
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
