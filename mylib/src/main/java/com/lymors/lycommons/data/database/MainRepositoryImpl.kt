@@ -31,6 +31,38 @@ class MainRepositoryImpl @Inject constructor(
 ) : MainRepository {
 
 
+    override suspend fun <T : Any> uploadAllModelsAtOnce(path: String, models: List<T>): MyResult<String> {
+        path.logT("uploadAllModelsAtOnce->path", "path")
+        return try {
+            val updates = models.associateBy { model ->
+                val keyProperty = model::class.declaredMemberProperties.find { it.name == "key" }
+                if (keyProperty != null) {
+                    keyProperty.isAccessible = true
+                    val key = keyProperty.call(model)?.toString() ?: ""
+                    val newKey = key.ifEmpty {
+                        databaseReference.push().key.toString().also { newKey ->
+                            if (keyProperty is KMutableProperty<*>) {
+                                (keyProperty as KMutableProperty<*>).setter.call(model, newKey)
+                            } else {
+                                throw IllegalStateException("The 'key' property is not mutable")
+                            }
+                        }
+                    }
+                    newKey
+                } else {
+                    databaseReference.push().key ?: throw IllegalStateException("Failed to generate a new key for model")
+                }
+            }
+
+            val updatesMap = updates.mapValues { it.value.shrink() }
+            databaseReference.child(path).updateChildren(updatesMap).await()
+            MyResult.Success("All models uploaded successfully")
+        } catch (e: Exception) {
+            MyResult.Error("Failed to upload models: ${e.message}")
+        }
+    }
+
+
 
 
 

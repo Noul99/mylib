@@ -13,14 +13,20 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Outline
+import android.graphics.Path
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.LayerDrawable
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewOutlineProvider
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.AlphaAnimation
@@ -33,6 +39,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.DatePicker
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.TextView
@@ -53,6 +60,91 @@ import java.util.Date
 import java.util.Locale
 
 object ViewExtensions {
+
+    fun View.setCornerRadius(radius: Int = 10) {
+        outlineProvider = object : ViewOutlineProvider() {
+            override fun getOutline(view: View, outline: Outline) {
+                outline.setRoundRect(0, 0, view.width, view.height, radius.toFloat())
+            }
+        }
+        clipToOutline = true
+        invalidate()
+    }
+
+
+    fun View.makeCircular(strokeWidth: Int = 0, strokeColor: Int = Color.BLACK) {
+        outlineProvider = object : ViewOutlineProvider() {
+            override fun getOutline(view: View, outline: Outline) {
+                outline.setOval(0, 0, view.width, view.height)
+            }
+        }
+        clipToOutline = true
+        invalidate()
+        val strokeDrawable = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(Color.TRANSPARENT) // Background color
+            setStroke(strokeWidth, strokeColor) // Border width and color
+        }
+        if (this is ImageView){
+            val layerDrawable = LayerDrawable(arrayOf(drawable, strokeDrawable))
+            foreground = layerDrawable
+            val padding = width
+            setPadding(padding, padding, padding, padding)
+        }
+    }
+
+
+
+    // Extension function for View to animate to the right with an onAnimationEnd callback
+    fun View.animateToRight(duration: Int = 250, onEnd: (animation: Animation) -> Unit = {}) {
+        val slideRightAnimation = TranslateAnimation(
+            Animation.RELATIVE_TO_PARENT, 0.0f,
+            Animation.RELATIVE_TO_PARENT, 1.0f,
+            Animation.RELATIVE_TO_PARENT, 0.0f,
+            Animation.RELATIVE_TO_PARENT, 0.0f
+        ).apply {
+            this.duration = duration.toLong()
+        }
+
+        slideRightAnimation.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationStart(animation: Animation?) {}
+
+            override fun onAnimationRepeat(animation: Animation?) {}
+
+            override fun onAnimationEnd(animation: Animation?) {
+                onEnd(animation ?: slideRightAnimation)
+            }
+        })
+
+        this.startAnimation(slideRightAnimation)
+    }
+
+    // Extension function for View to animate to the left with an onAnimationEnd callback
+    fun View.animateToLeft(duration: Int = 250, onEnd: (animation: Animation) -> Unit = {}) {
+        val slideLeftAnimation = TranslateAnimation(
+            Animation.RELATIVE_TO_PARENT, 0.0f,
+            Animation.RELATIVE_TO_PARENT, -1.0f,
+            Animation.RELATIVE_TO_PARENT, 0.0f,
+            Animation.RELATIVE_TO_PARENT, 0.0f
+        ).apply {
+            this.duration = duration.toLong()
+        }
+
+        slideLeftAnimation.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationStart(animation: Animation?) {}
+
+            override fun onAnimationRepeat(animation: Animation?) {}
+
+            override fun onAnimationEnd(animation: Animation?) {
+                onEnd(animation ?: slideLeftAnimation)
+            }
+        })
+
+        this.startAnimation(slideLeftAnimation)
+    }
+
+
+
 
 
 

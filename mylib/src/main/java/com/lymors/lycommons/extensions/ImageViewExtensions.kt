@@ -6,6 +6,7 @@ import android.app.Activity
 import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Bitmap
@@ -55,6 +56,7 @@ import com.lymors.lycommons.utils.FirebaseUploadWorker
 import com.lymors.lycommons.utils.MyExtensions.logT
 import com.lymors.lycommons.utils.MyExtensions.toBitmap
 import com.lymors.lycommons.utils.Utils.saveImageToInternalStorage
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -63,33 +65,6 @@ import kotlin.math.floor
 import kotlin.math.sqrt
 
 object ImageViewExtensions {
-
-
-
-    private lateinit var pickImageLauncher: ActivityResultLauncher<String>
-    private var onImagePickedCallback: ((Uri?) -> Unit)? = null
-
-    fun FragmentActivity.registerLauncherForImageResult() {
-        pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            pickedImageUri = uri
-            onImagePickedCallback?.invoke(uri)
-        }
-    }
-
-    fun AppCompatActivity.registerLauncherForImageResult() {
-        pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            pickedImageUri = uri
-            onImagePickedCallback?.invoke(uri)
-        }
-    }
-
-    fun View.pickImageInDialog(onImagePicked: (Uri?) -> Unit) {
-        this.setOnClickListener {
-            onImagePickedCallback = onImagePicked
-            pickImageLauncher.launch("image/*")
-        }
-
-    }
 
 
     fun uploadImageUsingWorkManager(context: Context, uri: String, path:String = "") {
@@ -140,188 +115,6 @@ object ImageViewExtensions {
         }
     }
 
-
-    fun View.pickImageCroppedByCameraAndGallery(
-        activity: AppCompatActivity,
-        onMediaPicked: (Uri?) -> Unit
-    ) {
-        val startForProfileImageResult =
-            activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-                val resultCode = result.resultCode
-                val data = result.data
-
-                if (resultCode == Activity.RESULT_OK) {
-                    //Image Uri will not be null for RESULT_OK
-                    activity.pickedImageUri = data?.data!!
-                    onMediaPicked.invoke(data.data)
-                } else if (resultCode == ImagePicker.RESULT_ERROR) {
-                    Toast.makeText(activity, ImagePicker.getError(data), Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(activity, "Task Cancelled", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-        this.setOnClickListener {
-            ImagePicker.with(activity)
-                .compress(1024)
-                .crop()//Final image size will be less than 1 MB(Optional)
-                .maxResultSize(
-                    1080,
-                    1080
-                )  //Final image resolution will be less than 1080 x 1080(Optional)
-                .createIntent { intent ->
-                    startForProfileImageResult.launch(intent)
-                }
-        }
-    }
-
-
-    fun View.pickImageCropped(activity: AppCompatActivity, onMediaPicked: (Uri?) -> Unit) {
-        val startForProfileImageResult =
-            activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-                val resultCode = result.resultCode
-                val data = result.data
-
-                if (resultCode == Activity.RESULT_OK) {
-                    //Image Uri will not be null for RESULT_OK
-                    activity.pickedImageUri = data?.data!!
-                    onMediaPicked.invoke(data.data)
-                } else if (resultCode == ImagePicker.RESULT_ERROR) {
-                    Toast.makeText(activity, ImagePicker.getError(data), Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(activity, "Task Cancelled", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-        this.setOnClickListener {
-            ImagePicker.with(activity)
-                .galleryOnly()
-                .crop()
-                .compress(1024)         //Final image size will be less than 1 MB(Optional)
-                .maxResultSize(
-                    1080,
-                    1080
-                )  //Final image resolution will be less than 1080 x 1080(Optional)
-                .createIntent { intent ->
-                    startForProfileImageResult.launch(intent)
-                }
-        }
-    }
-
-
-    fun View.pickImageByCameraCropped(activity: AppCompatActivity, onMediaPicked: (Uri?) -> Unit) {
-        val startForProfileImageResult =
-            activity.registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-                val resultCode = result.resultCode
-                val data = result.data
-
-                if (resultCode == Activity.RESULT_OK) {
-                    //Image Uri will not be null for RESULT_OK
-                    activity.pickedImageUri = data?.data!!
-                    onMediaPicked.invoke(data.data)
-                } else if (resultCode == ImagePicker.RESULT_ERROR) {
-                    Toast.makeText(activity, ImagePicker.getError(data), Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(activity, "Task Cancelled", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-        this.setOnClickListener {
-            ImagePicker.with(activity)
-                .cameraOnly()
-                .crop()
-                .compress(1024)         //Final image size will be less than 1 MB(Optional)
-                .maxResultSize(
-                    1080,
-                    1080
-                )  //Final image resolution will be less than 1080 x 1080(Optional)
-                .createIntent { intent ->
-                    startForProfileImageResult.launch(intent)
-                }
-        }
-    }
-
-
-//    fun View.pickImage(activity: AppCompatActivity, onMediaPicked: (Uri?) -> Unit) {
-//        val pickImageLauncher = activity.registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-//            activity.pickedImageUri = uri
-//            onMediaPicked.invoke(uri)
-//        }
-//        this.setOnClickListener {
-//            pickImageLauncher.launch("image/*")
-//        }
-//    }
-
-
-    fun View.pickImageByCamera(activity: AppCompatActivity, onMediaPicked: (Uri?) -> Unit) {
-        // Create a Uri for the captured image
-        val capturedImageUri: Uri? = getCapturedImageUri(activity)
-        val takePictureLauncher: ActivityResultLauncher<Uri> =
-            activity.registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-                if (success) {
-                    activity.pickedImageUri = capturedImageUri
-                    onMediaPicked.invoke(capturedImageUri)
-                } else {
-                    onMediaPicked.invoke(null) // Handle failed capture (optional)
-                }
-            }
-
-        this.setOnClickListener {
-            // Check camera permission before launching intent
-            if (ActivityCompat.checkSelfPermission(
-                    activity,
-                    android.Manifest.permission.CAMERA
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                takePictureLauncher.launch(capturedImageUri)
-            } else {
-                // Request camera permission if not granted
-                ActivityCompat.requestPermissions(
-                    activity,
-                    arrayOf(android.Manifest.permission.CAMERA),
-                    CAMERA_REQUEST_CODE
-                )
-            }
-        }
-    }
-
-
-    private fun getCapturedImageUri(activity: AppCompatActivity): Uri? {
-        val storageDir = activity.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        return try {
-            val imageFile =
-                File.createTempFile("JPEG_${System.currentTimeMillis()}_", ".jpg", storageDir)
-            FileProvider.getUriForFile(activity, "${activity.packageName}.fileprovider", imageFile)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
-
-
-//    private fun getCapturedImageUri(activity: AppCompatActivity): Uri? {
-//    val tempFile = File(activity.cacheDir, "temp_sticker.webp")
-//    var byteArrayOutputStream = ByteArrayOutputStream()
-//
-//    FileOutputStream(tempFile).use { fos ->
-//        fos.write(byteArrayOutputStream.toByteArray())
-//    }
-//
-//    return Uri.fromFile(tempFile)
-//    }
-
-    private const val CAMERA_REQUEST_CODE = 102 // Define a uni
-
-
-    fun View.pickMultipleImages(activity: AppCompatActivity, onMediaPicked: (List<Uri>?) -> Unit) {
-        val pickImageLauncher =
-            activity.registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uri ->
-                onMediaPicked.invoke(uri)
-            }
-        this.setOnClickListener {
-            pickImageLauncher.launch("image/*")
-        }
-    }
 
 
     fun EditText.scrollByY(scrollView: ScrollView, byY: Int = 400) {
@@ -406,29 +199,6 @@ object ImageViewExtensions {
 
         Glide.with(context).setDefaultRequestOptions(RequestOptions().frame(frame)).load(videoUrl)
             .into(this)
-    }
-
-    fun View.pickImage(activity: AppCompatActivity, onMediaPicked: (Uri?) -> Unit) {
-
-        val pickImageLauncher =
-            activity.registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-                activity.pickedImageUri = uri
-                onMediaPicked.invoke(uri)
-            }
-        this.setOnClickListener {
-            pickImageLauncher.launch("image/*")
-        }
-    }
-
-    fun AppCompatActivity.pickImage(onMediaPicked: (Uri?) -> Unit) {
-        val pickImageLauncher =
-            registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-                pickedImageUri = uri
-                onMediaPicked.invoke(uri)
-            }
-
-        // Launch the image picker when needed (e.g., in a button click listener)
-        pickImageLauncher.launch("image/*")
     }
 
 

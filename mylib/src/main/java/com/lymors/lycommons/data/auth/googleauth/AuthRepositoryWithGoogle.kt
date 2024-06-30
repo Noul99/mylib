@@ -7,6 +7,8 @@ import com.google.firebase.auth.AuthResult
 import com.lymors.lycommons.utils.MyResult
 
 interface AuthRepositoryWithGoogle {
-    fun requestGoogleSignIn(activity: AppCompatActivity, serverClientId:String)
-    fun signInWithGoogle(activity: AppCompatActivity, account: GoogleSignInAccount?, callback:(task: Task<AuthResult>) ->Unit)
+    fun signInWithGoogle(activity: AppCompatActivity, serverClientId: String, callback: (task: Task<AuthResult>?, account: GoogleSignInAccount?, exception: Exception?) -> Unit)
+    fun getGoogleAccount(activity: AppCompatActivity,serverClientId: String, accountCallback: ( account: GoogleSignInAccount?) ->Unit)
+    fun signOut(activity: AppCompatActivity,     serverClientId: String , onSignOutResult:(MyResult<String>) ->Unit)
+
 }

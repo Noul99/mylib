@@ -1,61 +1,37 @@
 package com.lymors.lycommons.utils
 
+
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.DatePickerDialog
 import android.app.Dialog
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.TimePickerDialog
 import android.content.ContentValues
 import android.content.Context
-import android.content.ContextWrapper
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.ColorMatrix
-import android.graphics.ColorMatrixColorFilter
-import android.graphics.Paint
-import android.graphics.PorterDuff
 import android.graphics.Typeface
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
-import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
 import android.graphics.pdf.PdfDocument
-import android.hardware.camera2.CameraAccessException
-import android.hardware.camera2.CameraManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
-import android.os.CountDownTimer
 import android.os.Environment
-import android.os.Parcelable
-import android.os.UserHandle
-import android.os.VibrationEffect
-import android.os.Vibrator
 import android.provider.MediaStore
-import android.provider.Settings
-import android.speech.tts.TextToSpeech
-import android.text.Editable
-import android.text.Html
-import android.text.InputType
 import android.text.SpannableStringBuilder
-import android.text.Spanned
-import android.text.TextWatcher
-import android.text.method.LinkMovementMethod
 import android.text.style.ForegroundColorSpan
 import android.text.style.RelativeSizeSpan
 import android.text.style.StyleSpan
+import android.util.DisplayMetrics
 import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
@@ -65,14 +41,7 @@ import android.view.View
 import android.view.ViewAnimationUtils
 import android.view.ViewGroup
 import android.view.Window
-import android.view.animation.AccelerateDecelerateInterpolator
-import android.view.animation.AccelerateInterpolator
-import android.view.animation.AlphaAnimation
-import android.view.animation.Animation
-import android.view.animation.DecelerateInterpolator
-import android.view.animation.RotateAnimation
-import android.view.animation.ScaleAnimation
-import android.view.animation.TranslateAnimation
+import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.webkit.WebView
 import android.widget.AdapterView
@@ -80,48 +49,27 @@ import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.CheckBox
-import android.widget.DatePicker
 import android.widget.EditText
 import android.widget.FrameLayout
-import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.PopupMenu
 import android.widget.RadioButton
 import android.widget.ScrollView
 import android.widget.SeekBar
 import android.widget.Spinner
 import android.widget.TextView
-import android.widget.TimePicker
 import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.ColorRes
-import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
-import androidx.core.graphics.drawable.toBitmap
-import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentTransaction
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 import androidx.viewpager.widget.ViewPager
 import androidx.viewpager2.widget.ViewPager2
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners
-import com.bumptech.glide.request.RequestOptions
-import com.github.dhaval2404.imagepicker.ImagePicker
-import com.google.android.material.animation.AnimatorSetCompat.playTogether
-import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
@@ -129,44 +77,43 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.MultiFormatWriter
-import com.google.zxing.WriterException
-import com.google.zxing.common.BitMatrix
 import com.lymors.lycommons.R
-import com.lymors.lycommons.extensions.StringExtensions.fromJson
 import com.lymors.lycommons.managers.DataStoreManager
-import com.lymors.lycommons.utils.MyExtensions.setupTabLayout
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import nl.joery.animatedbottombar.AnimatedBottomBar
 import org.json.JSONArray
 import org.json.JSONObject
-import org.mariuszgromada.math.mxparser.Expression
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.io.OutputStream
 import java.lang.reflect.Type
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.pow
 import kotlin.math.roundToInt
-import kotlin.math.sqrt
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
 
 object MyExtensions {
+
+
+    fun AppCompatActivity.replaceFragment(frameLayout: FrameLayout,fragment: Fragment, addToBackStack: Boolean) {
+        val fragmentManager: FragmentManager = supportFragmentManager
+        val fragmentTransaction: FragmentTransaction = fragmentManager.beginTransaction()
+        fragmentTransaction.replace(frameLayout.id, fragment)
+
+        if (addToBackStack) {
+            fragmentTransaction.addToBackStack(null)
+        }
+        fragmentTransaction.commit()
+    }
 
 
 
@@ -366,7 +313,7 @@ object MyExtensions {
         gravity: Int,
         width: Int,
         height: Int,
-        textColorRes: Int = R.color.cement  // Color resource for the text color
+        textColorRes: Int = com.lymors.lycommons.R.color.cement  // Color resource for the text color
     ): Button {
         val button = Button(context)
         val layoutParams = LinearLayout.LayoutParams(width, height)
@@ -812,8 +759,6 @@ object MyExtensions {
     }
 
 
-
-
     //start<NextActivity>()
     inline fun <reified T> Activity.start() {
         this.startActivity(Intent(this, T::class.java))
@@ -979,10 +924,10 @@ object MyExtensions {
         circularReveal.start()
     }
 
-    fun Context.showToast(message: String , duration:Int = Toast.LENGTH_SHORT) {
+    fun Context.showToast(message: Any , duration:Int = Toast.LENGTH_SHORT) {
         var v = this
         CoroutineScope(Dispatchers.Main).launch {
-            Toast.makeText(v, message, duration).show()
+            Toast.makeText(v, message.toString(), duration).show()
         }
     }
 
@@ -1014,96 +959,91 @@ object MyExtensions {
     }
 
 
+
+
+
+
+
     fun EditText.hideSoftKeyboard() {
         val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager.showSoftInput(this, InputMethodManager.HIDE_IMPLICIT_ONLY)
     }
 
 
-
-    inline fun <reified T : ViewBinding> Fragment.createBottomSheet(
+    inline fun <reified T : ViewBinding> AppCompatActivity.createBottomDialog(
         crossinline bindingInflater: (LayoutInflater) -> T,
-        callback: (Dialog) -> Unit = {}
-    ): T  {
-        var dialogBinding = bindingInflater.invoke(layoutInflater)
-        val dialog = BottomSheetDialog(requireActivity())
-        dialog.setContentView(dialogBinding.root)
+        callback: (T , Dialog) -> Unit = {_,_ ->}
+    ): Dialog {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+
+        val binding = bindingInflater(LayoutInflater.from(this))
+        dialog.setContentView(binding.root)
+
+        // Calculate 90% of the screen width
+        val displayMetrics = DisplayMetrics()
+        windowManager.defaultDisplay.getMetrics(displayMetrics)
+        val screenWidth = displayMetrics.widthPixels
+        val dialogWidth = (screenWidth * 0.92).toInt()
+
+        val windowParams = WindowManager.LayoutParams().apply {
+            copyFrom(dialog.window!!.attributes)
+            width = dialogWidth
+            height = ViewGroup.LayoutParams.WRAP_CONTENT
+            gravity = Gravity.BOTTOM
+        }
+
+        dialog.window!!.attributes = windowParams
+        dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window!!.attributes.windowAnimations = com.lymors.lycommons.R.style.DialogAnimation
         dialog.show()
-        callback(dialog)
-        return dialogBinding
+        callback(binding , dialog)
+        return dialog
     }
-
-    inline fun <reified T : ViewBinding> AppCompatActivity.createBottomSheet(
-        crossinline bindingInflater: (LayoutInflater) -> T,
-        callback: (Dialog) -> Unit = {}
-
-    ): T {
-        var dialogBinding = bindingInflater.invoke(layoutInflater)
-        val dialog = BottomSheetDialog(this)
-        dialog.setContentView(dialogBinding.root)
-        dialog.show()
-        callback(dialog)
-        return dialogBinding
-    }
-
-
 
 
 
     inline fun <reified T : ViewBinding> Fragment.createBottomDialog(
         crossinline bindingInflater: (LayoutInflater) -> T,
-        callback: (Dialog) -> Unit = {}
-    ): T {
-
+        callback: (T , Dialog) -> Unit = {_,_ ->}
+    ): Dialog {
         val dialog = Dialog(requireActivity())
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        val binding = bindingInflater(LayoutInflater.from(requireContext()))
+
+        val binding = bindingInflater(LayoutInflater.from(requireActivity()))
         dialog.setContentView(binding.root)
+        val displayMetrics = DisplayMetrics()
+        requireActivity().windowManager.defaultDisplay.getMetrics(displayMetrics)
+        val screenWidth = displayMetrics.widthPixels
+        val dialogWidth = (screenWidth * 0.92).toInt()
 
-        dialog.show()
-        dialog.window!!.setLayout(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-
-        dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.window!!.attributes.windowAnimations = R.style.DialogAnimation
-        dialog.window!!.setGravity(Gravity.BOTTOM)
-
-        callback(dialog)
-        return binding
-    }
-
-    inline fun <reified T : ViewBinding> AppCompatActivity.createBottomDialog(
-        crossinline bindingInflater: (LayoutInflater) -> T
-    ): T {
-        val dialog = Dialog(this)
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        val binding = bindingInflater(LayoutInflater.from(this))
-        dialog.setContentView(binding.root)
-
-        // Add horizontal line as close icon
-        val closeLine = FrameLayout(this).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                2 // Adjust the height as needed
-            )
-            setBackgroundColor(Color.BLACK)
-            setOnClickListener { dialog.dismiss() }
+        val windowParams = WindowManager.LayoutParams().apply {
+            copyFrom(dialog.window!!.attributes)
+            width = dialogWidth
+            height = ViewGroup.LayoutParams.WRAP_CONTENT
+            gravity = Gravity.BOTTOM
         }
 
-        dialog.addContentView(closeLine, closeLine.layoutParams)
-
-        dialog.show()
-        dialog.window!!.setLayout(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
+        dialog.window!!.attributes = windowParams
         dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.window!!.attributes.windowAnimations = R.style.DialogAnimation
-        dialog.window!!.setGravity(Gravity.BOTTOM)
-        return binding
+        dialog.window!!.attributes.windowAnimations = com.lymors.lycommons.R.style.DialogAnimation
+        dialog.show()
+        callback(binding , dialog)
+        return dialog
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     fun <T> List<T>.toArrayList(): ArrayList<T> {
         val arrayList = ArrayList<T>()
@@ -1113,6 +1053,7 @@ object MyExtensions {
 
 
     fun Any.shrink(): Map<String, Any> {
+        if (this.isNull()) return emptyMap()
         val propertiesMap = mutableMapOf<String, Any>()
         this::class.memberProperties.forEach { prop ->
             prop.isAccessible = true

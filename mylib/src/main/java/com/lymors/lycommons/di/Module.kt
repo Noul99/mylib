@@ -2,6 +2,7 @@ package com.lymors.lycommons.di
 
 
 
+import android.content.Context
 import com.lymors.lycommons.data.viewmodels.StorageViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
@@ -23,6 +24,7 @@ import com.lymors.lycommons.data.viewmodels.MainViewModel
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -98,7 +100,7 @@ object Module {
 
     @Provides
     @Singleton
-    fun provideStorageRepository(storageReference: StorageReference,storage: FirebaseStorage): StorageRepository = StorageRepositoryImpl(storageReference,storage)
+    fun provideStorageRepository(@ApplicationContext context: Context, storage: FirebaseStorage): StorageRepository = StorageRepositoryImpl(context ,storage)
 
 
     @Provides

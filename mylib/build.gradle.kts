@@ -83,8 +83,6 @@ dependencies {
     implementation ("com.google.zxing:core:3.4.0")
     implementation ("com.journeyapps:zxing-android-embedded:3.6.0")
 
-    // glide
-    implementation ("com.github.bumptech.glide:glide:4.16.0")
 
     // memberProperties
     implementation ("org.jetbrains.kotlin:kotlin-reflect:1.9.0")
@@ -112,8 +110,12 @@ dependencies {
 
     // work manager
     implementation("androidx.work:work-runtime-ktx:2.9.0")
-    implementation ("com.github.bumptech.glide:glide:4.12.0")
+
+    // glide
     kapt ("com.github.bumptech.glide:compiler:4.12.0")
+    implementation ("com.github.bumptech.glide:glide:4.16.0")
+//    implementation ("com.github.bumptech.glide:glide-transformations:4.3.0")
+
 
     // image picker
     implementation ("com.github.dhaval2404:imagepicker:2.1")
@@ -131,8 +133,11 @@ dependencies {
 
     implementation ("com.intuit.sdp:sdp-android:1.1.0")
 
+        //lotties
+            implementation ("com.airbnb.android:lottie:6.2.0")
 
 
-
+   // country code picker
+    implementation ("com.hbb20:ccp:2.5.0")
 
 }

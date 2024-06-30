@@ -2,6 +2,7 @@ package com.lymors.lycommons.extensions
 
 import android.R
 import android.annotation.SuppressLint
+import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
@@ -26,6 +27,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.text.HtmlCompat
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import com.hbb20.CountryCodePicker
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
@@ -33,8 +35,31 @@ import kotlin.math.sqrt
 
 object TextEditTextExtensions {
 
+    fun EditText.getFullNumber(countryCodePicker: CountryCodePicker):String{
+        countryCodePicker.registerCarrierNumberEditText(this)
+        return countryCodePicker.fullNumberWithPlus
+    }
 
-    fun TextView.showCountdownTimer( totalTimeInMillis: Long , onFinish: (Unit) ->Unit={} , onTicked:(Long) ->Unit = {}) {
+
+    fun TextView.paste(): String {
+        val clipboardManager: ClipboardManager =
+            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipData = clipboardManager.primaryClip
+        if (clipData != null && clipData.itemCount > 0) {
+            val item = clipData.getItemAt(0)
+            this.text = item.text
+            return item.text.toString()
+        }
+        return ""
+    }
+
+
+
+    fun TextView.showCountdownTimer(
+        totalTimeInMillis: Long,
+        onFinish: (Unit) -> Unit = {},
+        onTicked: (Long) -> Unit = {}
+    ) {
         object : CountDownTimer(totalTimeInMillis, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 val seconds = millisUntilFinished / 1000 % 60
@@ -52,7 +77,6 @@ object TextEditTextExtensions {
             }
         }.start()
     }
-
 
 
     fun TextView.setTextOrInvisible(text: String) {
@@ -78,19 +102,19 @@ object TextEditTextExtensions {
         movementMethod = LinkMovementMethod.getInstance()
     }
 
-    fun TextView.setTextSizeInSp( s: Float) {
+    fun TextView.setTextSizeInSp(s: Float) {
         setTextSize(TypedValue.COMPLEX_UNIT_SP, s)
     }
+
     fun TextView.setTextColorRes(@ColorRes colorResId: Int) {
         setTextColor(ContextCompat.getColor(context, colorResId))
     }
 
 
-
     private val EditText.inputMethodManager: InputMethodManager?
         get() = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
 
-    fun EditText.onTextChange(callback: (String) -> Unit){
+    fun EditText.onTextChange(callback: (String) -> Unit) {
         this.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(
                 s: CharSequence?,
@@ -99,6 +123,7 @@ object TextEditTextExtensions {
                 after: Int
             ) {
             }
+
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
                 callback(s.toString())
@@ -109,7 +134,7 @@ object TextEditTextExtensions {
     }
 
 
-    fun TextInputEditText.attachCNICValidation( textInputLayout: TextInputLayout) {
+    fun TextInputEditText.attachCNICValidation(textInputLayout: TextInputLayout) {
         addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
                 // No action needed before text changes
@@ -169,22 +194,19 @@ object TextEditTextExtensions {
     }
 
 
-
-
-
-
     // edit text
 
     fun EditText.getText(): String {
         return text.toString()
     }
+
     fun EditText.setMaxLength(maxLength: Int) {
         filters = arrayOf(android.text.InputFilter.LengthFilter(maxLength))
     }
+
     fun EditText.setSelectionToEnd() {
         setSelection(text.length)
     }
-
 
 
     // button
@@ -204,22 +226,6 @@ object TextEditTextExtensions {
         background = ContextCompat.getDrawable(context, drawableResId)
     }
 
-    fun Button.setRippleEffect() {
-        val attrs = intArrayOf(R.attr.selectableItemBackground)
-        val typedArray = context.obtainStyledAttributes(attrs)
-        val drawable = typedArray.getDrawable(0)
-        background = drawable
-        typedArray.recycle()
-    }
-
-
-
-    fun Button.setCornerRadius(radius: Float) {
-        val drawable = background
-        if (drawable is GradientDrawable) {
-            drawable.cornerRadius = radius
-        }
-    }
 
     fun Button.setElevationCompat(elevation: Float) {
         this.elevation = elevation
@@ -246,6 +252,7 @@ object TextEditTextExtensions {
                         mBaseDist = getDistance(event)
                         mBaseRatio = mRatio
                     }
+
                     MotionEvent.ACTION_MOVE -> {
                         val delta = (getDistance(event) - mBaseDist) / STEP.toFloat()
                         val multi = 2.0.pow(delta.toDouble()).toFloat()
@@ -260,12 +267,10 @@ object TextEditTextExtensions {
     }
 
 
-
     fun EditText.isEmpty(): Boolean {
 
         return text.toString().isEmpty()
     }
-
 
 
     fun EditText.setupQuantityControl(
@@ -294,12 +299,6 @@ object TextEditTextExtensions {
             }
         }
     }
-
-
-
-
-
-
 
 
     fun EditText.setListItems(items: List<String>) {
@@ -336,16 +335,16 @@ object TextEditTextExtensions {
     }
 
 
-    fun EditText.value():String{
+    fun EditText.value(): String {
         return this.text.toString()
     }
 
-    fun TextInputEditText.value():String{
+    fun TextInputEditText.value(): String {
         return this.text.toString()
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    fun TextView.setDefaultOptions(options:List<String>) {
+    fun TextView.setDefaultOptions(options: List<String>) {
         var currentIndex = 0
         var startX = 0f
         var startY = 0f
@@ -358,6 +357,7 @@ object TextEditTextExtensions {
                     startY = event.y
                     true
                 }
+
                 MotionEvent.ACTION_UP -> {
                     val endX = event.x
                     val endY = event.y
@@ -369,40 +369,12 @@ object TextEditTextExtensions {
                     }
                     true
                 }
+
                 else -> false
             }
         }
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    fun TextInputEditText.setDefaultOptions(options: List<String>) {
-        var currentIndex = 0
-        var startX = 0f
-        var startY = 0f
-        val distance = 10.0
-        setText(options[currentIndex])
-        setOnTouchListener { _, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    startX = event.x
-                    startY = event.y
-                    true
-                }
-                MotionEvent.ACTION_UP -> {
-                    val endX = event.x
-                    val endY = event.y
-                    val deltaX = endX - startX
-                    val deltaY = endY - startY
-                    if (deltaX < distance && deltaY < distance) {
-                        currentIndex = (currentIndex + 1) % options.size
-                        setText(options[currentIndex])
-                    }
-                    true
-                }
-                else -> false
-            }
-        }
-    }
 
     fun TextView.onTextChange(onTextChanged: (s: String) -> Unit) {
         this.addTextChangedListener(object : TextWatcher {
@@ -421,26 +393,10 @@ object TextEditTextExtensions {
         })
     }
 
-
-
-
-
-
-    fun EditText.showKeyboardForce() {
-        this.requestFocus()
-        val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        inputMethodManager.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT)
-
-        if (!inputMethodManager.isActive(this)) {
-            inputMethodManager.showSoftInput(this, InputMethodManager.SHOW_FORCED) // Use SHOW_FORCED directly
-        }
-
-        this.post {
-            val initialText = this.text.toString()
-            if (initialText.isNotEmpty()) {
-                val length = initialText.length
-                this.setSelection(length) // Set cursor position
-            }
-        }
-    }
 }
+
+
+
+
+
+

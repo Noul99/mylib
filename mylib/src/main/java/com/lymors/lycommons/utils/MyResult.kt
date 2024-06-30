@@ -5,7 +5,6 @@ import android.widget.Toast
 
 sealed class MyResult<out T : Any> {
 
-
     data class Success<out T : Any>(val data: T) : MyResult<T>()
     data class Error(val msg: String) : MyResult<Nothing>()
 
@@ -13,6 +12,20 @@ sealed class MyResult<out T : Any> {
         return when (this) {
             is Success<*> -> "Success[data=$data]"
             is Error -> "Error[exception=$msg]"
+        }
+    }
+
+    fun whenResult(onSuccess: (T) -> Unit, onError: (Exception) -> Unit) {
+        when (this) {
+            is Success -> onSuccess(data)
+            is Error -> onError(Exception(msg))  // Create an Exception object
+        }
+    }
+
+    fun whenIt(isSuccessFull: (Boolean) -> Unit) {
+        when (this) {
+            is Success -> isSuccessFull(true)
+            is Error -> isSuccessFull(false)
         }
     }
 

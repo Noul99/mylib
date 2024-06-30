@@ -1,19 +1,31 @@
 package com.lymors.lycommons.data.auth.phone
 
 import android.app.Activity
+import android.util.Log
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.lymors.lycommons.utils.MyExtensions.logT
 import com.lymors.lycommons.utils.MyResult
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.coroutines.resume
 
 
 class AuthRepositoryWithPhoneImpl @Inject constructor(private val auth: FirebaseAuth) :
     AuthRepositoryWithPhone {
+
+    lateinit var callBack :PhoneAuthProvider.OnVerificationStateChangedCallbacks
 
     override suspend fun signInUser(
         phone: String,
@@ -22,22 +34,28 @@ class AuthRepositoryWithPhoneImpl @Inject constructor(private val auth: Firebase
         authVerificationFailed: (String) -> Unit,
         codeSend: (verificationId: String, token: PhoneAuthProvider.ForceResendingToken) -> Unit
     ): PhoneAuthProvider.OnVerificationStateChangedCallbacks {
-        val callBack = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+        Log.i("TAG", "repo -> signInUser")
+        callBack = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
             override fun onVerificationCompleted(p0: PhoneAuthCredential) {
                 phoneAuthCredential(p0)
+                Log.i("TAG", "repo -> onVerificationCompleted")
             }
 
             override fun onVerificationFailed(e: FirebaseException) {
                 authVerificationFailed(e.message!!)
+
+                Log.i("TAG", "repo -> authVerificationFailed : ${e.message}")
             }
 
             override fun onCodeSent(
                 verificationId: String,
                 token: PhoneAuthProvider.ForceResendingToken
             ) {
-                codeSend(verificationId, token)
+                Log.i("TAG", "repo -> onCodeSent ")
+                codeSend(verificationId, token )
             }
         }
+
         val options = PhoneAuthOptions.newBuilder(auth)
             .setPhoneNumber(phone)
             .setTimeout(60L, TimeUnit.SECONDS)
@@ -49,8 +67,9 @@ class AuthRepositoryWithPhoneImpl @Inject constructor(private val auth: Firebase
 
     override suspend fun loginUser(credential: PhoneAuthCredential): MyResult<String> {
         return try {
+            Log.i("TAG", "repo -> loginUser")
             auth.signInWithCredential(credential).await()
-            MyResult.Success("Login")
+            MyResult.Success("Login successful")
         } catch (e: Exception) {
             MyResult.Success("${e.message}")
         }
@@ -62,12 +81,13 @@ class AuthRepositoryWithPhoneImpl @Inject constructor(private val auth: Firebase
         context: Activity,
         phoneNumber: String
     ): MyResult<String> {
+        Log.i("TAG", "repo -> resendOtp")
         return try {
             PhoneAuthProvider.getInstance()
                 .verifyPhoneNumber(phoneNumber, 60, TimeUnit.SECONDS, context, callBack, token)
             MyResult.Success("Code send.")
         } catch (e: Exception) {
-            MyResult.Success("${e.message}")
+            MyResult.Error("${e.message}")
         }
     }
 

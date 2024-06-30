@@ -11,18 +11,13 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat.getDrawable
 import androidx.lifecycle.lifecycleScope
-import androidx.viewbinding.ViewBinding
 import com.lymors.commonslib.MyUtils.dialogUtil
 import com.lymors.commonslib.databinding.ActivityMainBinding
 import com.lymors.commonslib.databinding.NewUserBinding
 import com.lymors.commonslib.databinding.StudentSampleRowBinding
 import com.lymors.lycommons.data.viewmodels.MainViewModel
 import com.lymors.lycommons.extensions.ImageViewExtensions.loadImageFromUrl
-import com.lymors.lycommons.extensions.ImageViewExtensions.pickImageInDialog
-import com.lymors.lycommons.extensions.ImageViewExtensions.registerLauncherForImageResult
-import com.lymors.lycommons.extensions.ScreenExtensions.addCardViewToCenter
 import com.lymors.lycommons.extensions.ScreenExtensions.pickedImageUri
-import com.lymors.lycommons.extensions.ScreenExtensions.replaceFragment
 import com.lymors.lycommons.extensions.ScreenExtensions.showToast
 import com.lymors.lycommons.extensions.TextEditTextExtensions.onTextChange
 import com.lymors.lycommons.extensions.ViewExtensions.attachDatePicker
@@ -33,14 +28,10 @@ import com.lymors.lycommons.utils.MyExtensions.hideSoftKeyboard
 import com.lymors.lycommons.utils.MyExtensions.logT
 import com.lymors.lycommons.utils.MyExtensions.setOptions
 import com.lymors.lycommons.utils.MyExtensions.showSoftKeyboard
-import com.lymors.lycommons.utils.MyExtensions.shrink
 import com.lymors.lycommons.utils.MyExtensions.viewBinding
-import com.lymors.lycommons.utils.Utils.allProperties
-import com.lymors.lycommons.utils.Utils.attachDataOnViews
-import com.lymors.lycommons.utils.Utils.findId
+import com.lymors.lycommons.utils.MyImagePicker.pickImageByGallery
 import com.lymors.lycommons.utils.Utils.hideSoftKeyboard
 import com.lymors.lycommons.utils.Utils.setData
-import com.lymors.lycommons.utils.Utils.setDataToView
 import com.lymors.lycommons.utils.Utils.showCustomLayoutDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -63,16 +54,13 @@ class MainActivity : AppCompatActivity() {
     lateinit var imagePicker : ImageView
 
 
-
     private val binding by viewBinding(ActivityMainBinding::inflate)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         imagePicker = ImageView(this)
         "onCreate".logT()
-        registerLauncherForImageResult()
 
-        addCardViewToCenter(ActivityMainBinding.inflate(layoutInflater),NewUserBinding::inflate)
         setContentView(binding.root)
 
         lifecycleScope.launch {
@@ -124,9 +112,10 @@ class MainActivity : AppCompatActivity() {
 
 
 
-        binding.searchIcon.setOnClickListener {
-            mainViewModel.setSearchingState(true)
-        }
+//        binding.searchIcon.setOnClickListener {
+//
+////            mainViewModel.setSearchingState(true)
+//        }
 
      
     }
@@ -250,7 +239,7 @@ class MainActivity : AppCompatActivity() {
     private fun setUpRecyclerView(users : List<UserModel> , pageSize : Int = 20) {
 
 
-        binding.recyclerview.setData(users,null, pageSize ,  StudentSampleRowBinding::inflate , { b, item, position ->
+        binding.recyclerview.setData(users,  StudentSampleRowBinding::inflate) { b, item, position ->
 
             b.birth.text = position.toString()
 //
@@ -260,16 +249,22 @@ class MainActivity : AppCompatActivity() {
 //            b.phone.text = item.phone
 //            b.birth.text = position.toString()
 
-            if (item in listOfSelectedItems){
+            if (item in listOfSelectedItems) {
                 // if item is selected then set the background
-                b.cardView.background = getDrawable(this@MainActivity, com.lymors.lycommons.R.drawable.selected_background)
-            }else{
+                b.cardView.background = getDrawable(
+                    this@MainActivity,
+                    com.lymors.lycommons.R.drawable.selected_background
+                )
+            } else {
                 b.cardView.background = null
             }
 
             b.cardView.setOnLongClickListener { view ->
 
-                b.cardView.background = getDrawable(this@MainActivity, com.lymors.lycommons.R.drawable.selected_background)
+                b.cardView.background = getDrawable(
+                    this@MainActivity,
+                    com.lymors.lycommons.R.drawable.selected_background
+                )
                 listOfSelectedViews.add(view)
                 listOfSelectedItems.add(item)
 
@@ -290,35 +285,23 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         listOfSelectedItems.add(item)
                         listOfSelectedViews.add(it)
-                        b.cardView.background = getDrawable(this@MainActivity, com.lymors.lycommons.R.drawable.selected_background)
+                        b.cardView.background = getDrawable(
+                            this@MainActivity,
+                            com.lymors.lycommons.R.drawable.selected_background
+                        )
                     }
-                    if (listOfSelectedItems.size==1){
+                    if (listOfSelectedItems.size == 1) {
                         binding.update.setVisibleOrGone(true)
-                    }else{
+                    } else {
                         binding.update.setVisibleOrGone(false)
                     }
-                }else{
-                    var intent = Intent(this@MainActivity , SecondActivity::class.java)
-                    intent.putExtra("data","data")
+                } else {
+                    var intent = Intent(this@MainActivity, SecondActivity::class.java)
+                    intent.putExtra("data", "data")
                     startActivity(intent)
                 }
             }
-        },{ more->
-            lifecycleScope.launch {
-               var d =  dialogUtil.showProgressDialog(this@MainActivity , "Loading...")
-
-                more.logT("more")
-                // change you model here
-                mainViewModel.collectAnyModels("users", UserModel::class.java, more ).collect { users ->
-                    allUsers = users
-                    users.logT("load more")
-                    if (users.isNotEmpty()){
-                    d.dismiss()
-                    setUpRecyclerView( allUsers.reversed() , more)
-                    }
-                }
-            }
-        })
+        }
 
     }
 
@@ -343,7 +326,8 @@ class MainActivity : AppCompatActivity() {
 //                    showToast(it.toString())
 //                }
 
-                profileImage.pickImageInDialog {
+                profileImage.
+                pickImageByGallery(this@MainActivity) {
                     profileImage.setImageURI(pickedImageUri)
                 }
 

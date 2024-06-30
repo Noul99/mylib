@@ -1,6 +1,8 @@
 package com.lymors.lycommons.extensions
 
 import android.annotation.SuppressLint
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -18,6 +20,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
 import com.google.zxing.WriterException
 import com.google.zxing.common.BitMatrix
+import com.lymors.lycommons.managers.MyClipboardManager
 import com.lymors.lycommons.utils.MyExtensions.empty
 import org.json.JSONArray
 import org.json.JSONObject
@@ -37,6 +40,15 @@ import javax.crypto.spec.SecretKeySpec
 
 
 object StringExtensions {
+
+
+    fun String.copyToClipboard(context: Context) {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText("copy", this)
+        clipboard.setPrimaryClip(clip)
+        Toast.makeText(context, "Text copied to clipboard", Toast.LENGTH_SHORT).show()
+        }
+
 
     fun String.isNumber() =
         String.empty() != this && Pattern.compile("^[0-9]*$").matcher(this).matches()

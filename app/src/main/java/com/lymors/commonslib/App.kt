@@ -8,8 +8,6 @@ import dagger.hilt.android.HiltAndroidApp
 class App:Application(){
     override fun onCreate() {
         super.onCreate()
-        FirebaseDatabase.getInstance().setPersistenceEnabled(true)
-        FirebaseDatabase.getInstance().reference.keepSynced(true)
 
     }
 

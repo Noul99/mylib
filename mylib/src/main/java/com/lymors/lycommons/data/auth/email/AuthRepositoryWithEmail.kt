@@ -5,7 +5,7 @@ import com.lymors.lycommons.utils.MyResult
 
 
 interface AuthRepositoryWithEmail {
-    suspend fun registerUser(email:String,password:String): MyResult<String>
-    suspend fun loginUser(email:String, password:String): MyResult<String>
+    suspend fun signUpUserWithEmailAndPassword(email:String, password:String): MyResult<String>
+    suspend fun loginUserWithEmailAndPassword(email:String, password:String): MyResult<String>
 
 }

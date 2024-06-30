@@ -3,7 +3,6 @@ package com.lymors.commonslib
 
 
 import android.content.DialogInterface
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,17 +10,13 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.content.ContextCompat.getDrawable
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.lymors.commonslib.MyUtils.dialogUtil
 import com.lymors.commonslib.databinding.FragmentTestBinding
 import com.lymors.commonslib.databinding.NewUserBinding
-import com.lymors.commonslib.databinding.StudentSampleRowBinding
 import com.lymors.lycommons.data.viewmodels.MainViewModel
 import com.lymors.lycommons.extensions.ImageViewExtensions.loadImageFromUrl
-import com.lymors.lycommons.extensions.ImageViewExtensions.pickImageInDialog
-import com.lymors.lycommons.extensions.ImageViewExtensions.registerLauncherForImageResult
 import com.lymors.lycommons.extensions.ScreenExtensions.pickedImageUri
 import com.lymors.lycommons.extensions.ScreenExtensions.showToast
 import com.lymors.lycommons.extensions.ScreenExtensions.viewBinding
@@ -35,7 +30,6 @@ import com.lymors.lycommons.utils.MyExtensions.logT
 import com.lymors.lycommons.utils.MyExtensions.setOptions
 import com.lymors.lycommons.utils.MyExtensions.showSoftKeyboard
 import com.lymors.lycommons.utils.Utils.hideSoftKeyboard
-import com.lymors.lycommons.utils.Utils.setData
 import com.lymors.lycommons.utils.Utils.showCustomLayoutDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -240,71 +234,72 @@ return binding.root
 
 
 
-        binding.recyclerview.setData(users,null, pageSize ,  StudentSampleRowBinding::inflate , { b, item, position ->
-            b.profileImage.loadImageFromUrl(item.profileImage)
-            b.name.text = item.name
-            b.phone.text = item.phone
-            b.birth.text = position.toString()
-
-            if (item in listOfSelectedItems){
-                // if item is selected then set the background
-                b.cardView.background = getDrawable(requireActivity(), com.lymors.lycommons.R.drawable.selected_background)
-            }else{
-                b.cardView.background = null
-            }
-
-            b.cardView.setOnLongClickListener { view ->
-
-                b.cardView.background = getDrawable(requireActivity(), com.lymors.lycommons.R.drawable.selected_background)
-                listOfSelectedViews.add(view)
-                listOfSelectedItems.add(item)
-
-                mainViewModel.setLongClickedState(true)
-                true
-            }
-
-            b.cardView.setOnClickListener {
-
-                if (mainViewModel.longClickedState.value) {
-                    if (item in listOfSelectedItems) {
-                        listOfSelectedItems.remove(item)
-                        listOfSelectedViews.remove(it)
-                        b.cardView.background = null
-                        if (listOfSelectedItems.size == 0) {
-                            mainViewModel.setLongClickedState(false)
-                        }
-                    } else {
-                        listOfSelectedItems.add(item)
-                        listOfSelectedViews.add(it)
-                        b.cardView.background = getDrawable(requireActivity(), com.lymors.lycommons.R.drawable.selected_background)
-                    }
-                    if (listOfSelectedItems.size==1){
-                        binding.update.setVisibleOrGone(true)
-                    }else{
-                        binding.update.setVisibleOrGone(false)
-                    }
-                }else{
-                    var intent = Intent(requireActivity() , SecondActivity::class.java)
-                    intent.putExtra("data","data")
-                    startActivity(intent)
-                }
-            }
-        },{ more->
-            lifecycleScope.launch {
-                var d =  dialogUtil.showProgressDialog(requireActivity() , "Loading...")
-
-                more.logT("more")
-                // change you model here
-                mainViewModel.collectAnyModels("users", UserModel::class.java, more ).collect { users ->
-                    allUsers = users
-                    users.logT("load more")
-                    if (users.isNotEmpty()){
-                        d.dismiss()
-                        setUpRecyclerView( allUsers.reversed() , more)
-                    }
-                }
-            }
-        })
+//        binding.recyclerview.setData(users,null, pageSize ,  StudentSampleRowBinding::inflate , { b, item, position ->
+//
+//            b.profileImage.loadImageFromUrl(item.profileImage)
+//            b.name.text = item.name
+//            b.phone.text = item.phone
+//            b.birth.text = position.toString()
+//
+//            if (item in listOfSelectedItems){
+//                // if item is selected then set the background
+//                b.cardView.background = getDrawable(requireActivity(), com.lymors.lycommons.R.drawable.selected_background)
+//            }else{
+//                b.cardView.background = null
+//            }
+//
+//            b.cardView.setOnLongClickListener { view ->
+//
+//                b.cardView.background = getDrawable(requireActivity(), com.lymors.lycommons.R.drawable.selected_background)
+//                listOfSelectedViews.add(view)
+//                listOfSelectedItems.add(item)
+//
+//                mainViewModel.setLongClickedState(true)
+//                true
+//            }
+//
+//            b.cardView.setOnClickListener {
+//
+//                if (mainViewModel.longClickedState.value) {
+//                    if (item in listOfSelectedItems) {
+//                        listOfSelectedItems.remove(item)
+//                        listOfSelectedViews.remove(it)
+//                        b.cardView.background = null
+//                        if (listOfSelectedItems.size == 0) {
+//                            mainViewModel.setLongClickedState(false)
+//                        }
+//                    } else {
+//                        listOfSelectedItems.add(item)
+//                        listOfSelectedViews.add(it)
+//                        b.cardView.background = getDrawable(requireActivity(), com.lymors.lycommons.R.drawable.selected_background)
+//                    }
+//                    if (listOfSelectedItems.size==1){
+//                        binding.update.setVisibleOrGone(true)
+//                    }else{
+//                        binding.update.setVisibleOrGone(false)
+//                    }
+//                }else{
+//                    var intent = Intent(requireActivity() , SecondActivity::class.java)
+//                    intent.putExtra("data","data")
+//                    startActivity(intent)
+//                }
+//            }
+//        },{ more->
+//            lifecycleScope.launch {
+//                var d =  dialogUtil.showProgressDialog(requireActivity() , "Loading...")
+//
+//                more.logT("more")
+//                // change you model here
+//                mainViewModel.collectAnyModels("users", UserModel::class.java, more ).collect { users ->
+//                    allUsers = users
+//                    users.logT("load more")
+//                    if (users.isNotEmpty()){
+//                        d.dismiss()
+//                        setUpRecyclerView( allUsers.reversed() , more)
+//                    }
+//                }
+//            }
+//        })
 
     }
 
@@ -327,9 +322,9 @@ return binding.root
 //                    showToast(it.toString())
 //                }
 
-                profileImage.pickImageInDialog {
-                    profileImage.setImageURI(requireActivity().pickedImageUri)
-                }
+//                profileImage.pickImageInDialog {
+//                    profileImage.setImageURI(requireActivity().pickedImageUri)
+//                }
 
                 cancelBtn.setOnClickListener { dialogUtil.dialog.dismiss() }
                 saveBtn.setOnClickListener {

@@ -6,7 +6,23 @@ import kotlin.math.roundToInt
 
 object NumbersExtensions {
 
-    fun String.toDoubleOrDefault(defaultValue: Double): Double {
+
+    private val indexMap = mutableMapOf<List<*>, Int>()
+
+    private var List<*>.currentIndex: Int
+        get() = indexMap[this] ?: 0
+        set(value) {
+            indexMap[this] = value
+        }
+
+    fun List<Int>.next(): Int {
+        if (isEmpty()) throw NoSuchElementException("List is empty")
+        val value = this[currentIndex % size]
+        currentIndex++
+        return value
+    }
+
+    fun String.toDoubleOrDefault(defaultValue: Double =0.0): Double {
         return try {
             this.toDouble()
         } catch (e: NumberFormatException) {

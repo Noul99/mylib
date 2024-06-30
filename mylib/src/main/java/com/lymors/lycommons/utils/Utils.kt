@@ -4,16 +4,20 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.os.Parcelable
 import android.telephony.SmsManager
 import android.view.LayoutInflater
 import android.view.View
@@ -22,9 +26,13 @@ import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.Animation
 import android.view.inputmethod.InputMethodManager
+import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.ProgressBar
+import android.widget.RadioButton
 import android.widget.TextView
 import androidx.annotation.DimenRes
 import androidx.annotation.RequiresApi
@@ -65,21 +73,50 @@ import kotlin.reflect.full.memberProperties
 
 object Utils {
 
-    fun setDataToView(view: View?, data: Any?){
-        if (view==null || data==null) return
-        when(view){
+
+    fun paste(context: Context): String {
+        val clipboardManager: ClipboardManager =
+            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipData = clipboardManager.primaryClip
+        if (clipData != null && clipData.itemCount > 0) {
+            val item = clipData.getItemAt(0)
+            return item.text.toString()
+        }
+        return ""
+    }
+
+    fun setDataToView(view: View?, data: Any?) {
+        if (view == null || data == null) return
+        if (data is Boolean){
+         if ( view is RadioButton ){
+                    view.isChecked = data
+             return
+            }
+            if (view is CheckBox){
+                    view.isChecked = data
+                return
+            }
+        }
+        when (view) {
             is EditText -> view.setText(data.toString())
-            is TextView -> view.text = data.toString()
+            is TextView -> {
+                view.text = data.toString()
+            }
             is ImageView -> {
-                if (data is String){
-                    view.loadImageFromUrl(data)
-                }else if (data is Int){
-                    view.setImageResource(data)
+                when (data) {
+                    is String -> view.loadImageFromUrl(data)
+                    is Int -> view.setImageResource(data)
+                    is Drawable -> view.setImageDrawable(data)
+                    is Bitmap -> view.setImageBitmap(data)
                 }
             }
-
+            is ProgressBar -> {
+                when (data) {
+                    is Int -> view.progress = data
+                    is Float -> view.progress = data.toInt()
+                }
+            }
         }
-
     }
 
     private val cache = mutableMapOf<KClass<*>, List<String>>()
@@ -179,10 +216,31 @@ fun Any.allProperties(): List<String> {
     }
 
 
-
     val Activity.sharedPref:SharedPreferencesHelper
         get() = SharedPreferencesHelper(this)
 
+    var intentParcelable:Parcelable? = null
+    var Activity.intentParcelable: Parcelable?
+        get() = Utils.intentParcelable
+        set(value) {
+            Utils.intentParcelable = value
+        }
+
+
+
+    var intentString:String? = null
+    var Activity.intentString:String
+        get() = intentString ?: ""
+        set(value) {
+            intentString = value
+        }
+
+    var intentInt:Int =0
+    var Activity.intentInt:Int
+        get() = intentInt
+        set(value) {
+            intentInt = value
+        }
 
 
 //    private fun setDataToViews(view: View, data: Any) {
@@ -272,32 +330,13 @@ fun Any.allProperties(): List<String> {
     }
 
 
-    fun pickImage(requestCode: Int, context: Activity) {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-        intent.addCategory(Intent.CATEGORY_OPENABLE)
-        intent.type = "image/*"
-        context.startActivityForResult(intent, requestCode)
-    }
 
-    @SuppressLint("IntentReset")
-    fun pickVideo(requestCode: Int, context: Activity) {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-        intent.addCategory(Intent.CATEGORY_OPENABLE)
-        intent.type = "video/*"
-        context.startActivityForResult(intent, requestCode)
-    }
+
 
     fun sendMessageToWhatsApp(context: Context, phoneNumber: String, message: String) {
         val intent = Intent(Intent.ACTION_VIEW)
         intent.data = Uri.parse("https://wa.me/$phoneNumber/?text=${Uri.encode(message)}")
         context.startActivity(intent)
-    }
-
-    fun pickDocument(requestCode: Int, context: Activity) {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
-        intent.addCategory(Intent.CATEGORY_OPENABLE)
-        intent.type = "application/*"
-        context.startActivityForResult(intent, requestCode)
     }
 
 
@@ -493,18 +532,18 @@ fun Any.allProperties(): List<String> {
 
 
     // paging adapter
-    fun <T, VB : ViewBinding> RecyclerView.setData(
+    fun <T, VB : ViewBinding> RecyclerView.setDataWithPaging(
         items: List<T>,
         animation: Animation? = null,
         pageSize:Int = 10,
         bindingInflater: (LayoutInflater, ViewGroup, Boolean) -> VB,
         bindHolder: (binding: VB, item: T, position: Int) -> Unit,
-        loadMore: (lastKey:Int) -> Unit,
+        loadMore: (lastKey:Int) -> Unit = {},
     ) {
 
         val existingAdapter = this.adapter as? GenericPagingAdapter<T, VB>
         if (items.isNotEmpty()) {
-            if (existingAdapter != null) {
+            if (existingAdapter != null && existingAdapter.currentBindingInflater == bindingInflater){
                 existingAdapter.updateData(items)
             } else {
                 val adapter = GenericPagingAdapter(items, animation, bindingInflater, bindHolder, loadMore, pageSize
@@ -540,6 +579,8 @@ fun Any.allProperties(): List<String> {
         private val pageSize: Int
     ) : RecyclerView.Adapter<DataViewHolder<VB>>() {
         private var adapterList: List<T> = items
+
+        var currentBindingInflater = bindingInflater
 
 
         var bindingMap: Map<String, Any> = mapOf()
@@ -596,6 +637,7 @@ fun Any.allProperties(): List<String> {
         private val bindHolder: (binding: VB, item: T, position: Int) -> Unit,
         private val animation: Animation?,
     ) : RecyclerView.Adapter<DataViewHolder<VB>>() {
+        var currentBindingInflater = bindingInflater
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DataViewHolder<VB> {
             val layoutInflater = LayoutInflater.from(parent.context)
             val binding = bindingInflater(layoutInflater, parent, false)
@@ -607,6 +649,7 @@ fun Any.allProperties(): List<String> {
                 holder.itemView.startAnimation(it)
             }
         }
+
         override fun getItemCount(): Int = items.size
         fun updateData(newItems: List<T>) {
             newItems.logT("newItems")
@@ -621,7 +664,7 @@ fun Any.allProperties(): List<String> {
         bindHolder: (binding: VB, item: T, position: Int) -> Unit,
     ) {
         val existingAdapter = this.adapter as? GenericAdapter<T, VB>
-        if (existingAdapter != null) {
+        if (existingAdapter != null && existingAdapter.currentBindingInflater == bindingInflater) {
             existingAdapter.updateData(items)
         } else {
             val adapter = GenericAdapter(
@@ -635,7 +678,7 @@ fun Any.allProperties(): List<String> {
     }
 
 
-    fun <T, VB : ViewBinding> RecyclerView.setData(
+    fun <T, VB : ViewBinding> RecyclerView.setDataWithAnimation(
         animation: Animation? = null,
         items: List<T>,
         bindingInflater: (LayoutInflater, ViewGroup, Boolean) -> VB,
@@ -643,7 +686,7 @@ fun Any.allProperties(): List<String> {
 
     ) {
         val existingAdapter = this.adapter as? GenericAdapter<T, VB>
-        if (existingAdapter != null) {
+        if (existingAdapter != null && existingAdapter.currentBindingInflater==bindingInflater)  {
             existingAdapter.updateData(items)
         } else {
             val adapter = GenericAdapter(items, bindingInflater, bindHolder, animation,)
@@ -797,11 +840,6 @@ fun Any.allProperties(): List<String> {
         val intent = Intent(Intent.ACTION_DIAL)
         intent.data = Uri.parse("tel:$phoneNumber")
         startActivity(intent)
-    }
-
-    fun View.showKeyboard() {
-        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT)
     }
 
 }

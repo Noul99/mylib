@@ -39,42 +39,53 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.lymors.lycommons.R
 import com.lymors.lycommons.utils.MyPermissionHelper
 import nl.joery.animatedbottombar.AnimatedBottomBar
+import org.checkerframework.checker.units.qual.Length
+import java.util.WeakHashMap
+import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KProperty
 
 object ScreenExtensions {
 
-    inline fun <reified MB : ViewBinding, CB : ViewBinding> AppCompatActivity.addCardViewToCenter(
+
+    inline fun <reified MB : ViewBinding, DB : ViewBinding> Activity.setUpDrawer(
         mainActivityBinding: MB,
-        crossinline cardViewInflater: (LayoutInflater) -> CB
+        crossinline drawerContentInflater: (LayoutInflater) -> DB,
+        openDrawerButton: View,
+        crossinline setupDrawerContent: (DrawerLayout, DB) -> Unit
     ) {
         val inflater = LayoutInflater.from(this)
-        val cardViewBinding = cardViewInflater.invoke(inflater)
+        val drawerContentBinding = drawerContentInflater.invoke(inflater)
 
-        // Create a new CardView
-        val cardView = CardView(this).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.CENTER
-            }
-            radius = 16f
-            setCardBackgroundColor(ContextCompat.getColor(context, R.color.black))
-            cardElevation = 8f
-
-            // Remove the view from its current parent if it has one
-            (cardViewBinding.root.parent as? ViewGroup)?.removeView(cardViewBinding.root)
-
-            // Add the card content to the CardView
-            addView(cardViewBinding.root)
+        val drawerLayout = DrawerLayout(this).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
         }
+        val mainActivityView = mainActivityBinding.root
+        val parentViewGroup = mainActivityView.parent as? ViewGroup
+        parentViewGroup?.removeView(mainActivityView)
+        drawerLayout.addView(mainActivityView)
+        val gravity = GravityCompat.START
+        drawerLayout.addView(
+            drawerContentBinding.root,
+            DrawerLayout.LayoutParams(
+                DrawerLayout.LayoutParams.MATCH_PARENT,
+                DrawerLayout.LayoutParams.MATCH_PARENT,
+                gravity
+            )
+        )
+        setContentView(drawerLayout)
+        openDrawerButton.setOnClickListener {
+            drawerLayout.openDrawer(GravityCompat.START)
+        }
+        setupDrawerContent(drawerLayout, drawerContentBinding)
 
-        // Remove the CardView from its current parent if it has one
-        (cardView.parent as? ViewGroup)?.removeView(cardView)
-
-        // Add the CardView to the root layout of the parent binding
-        (mainActivityBinding.root as ViewGroup).addView(cardView)
+        // Ensure drawer content is interactive and not clicking through
+        drawerContentBinding.root.isClickable = true
+        drawerContentBinding.root.isFocusable = true
+        drawerContentBinding.root.isFocusableInTouchMode = true
     }
-
 
 
     var AppCompatActivity.myPermissionHelper: MyPermissionHelper
@@ -83,13 +94,21 @@ object ScreenExtensions {
             MyPermissionHelper(this)
         }
 
-    private var _pickedImageUri: Uri? = null
-
-    var Activity.pickedImageUri: Uri?
-        get() = _pickedImageUri
+    var Fragment.myPermissionHelper: MyPermissionHelper
+        get() = MyPermissionHelper(requireActivity() as AppCompatActivity)
         set(value) {
-            _pickedImageUri = value
+            MyPermissionHelper(requireActivity() as AppCompatActivity)
         }
+
+
+    // WeakHashMap to hold the picked image URI for each Activity instance
+    private val activityPickedImageUriMap = WeakHashMap<Activity, Uri?>()
+    var Activity.pickedImageUri: Uri?
+        get() = activityPickedImageUriMap[this]
+        set(value) {
+            activityPickedImageUriMap[this] = value
+        }
+
 
     inline fun <T : ViewBinding> Fragment.viewBinding(
         crossinline bindingInflater: (LayoutInflater) -> T
@@ -164,19 +183,47 @@ object ScreenExtensions {
 
 
 
-    fun Activity.launchActivity(destination: Class<*>, key: String = "", data: Parcelable? = null) {
-        // Create an Intent to launch the target activity
+    fun Activity.launchActivity(destination: Class<*>, key: String , data: Parcelable? = null) {
         val intent = Intent(this, destination::class.java)
-
-        // Put the data into the Intent using the specified key
         if (key.isNotEmpty() && data != null) {
             intent.putExtra(key, data)
         }
-
-        // Start the activity with the created Intent
         startActivity(intent)
     }
-    fun Fragment.launchActivity(destination: Class<*>, key: String = "", data: Parcelable? = null) {
+    fun Activity.launchActivity(destination: Class<*>, key: String = "", data: String = "") {
+        val intent = Intent(this, destination::class.java)
+        if (key.isNotEmpty()) {
+            intent.putExtra(key, data)
+        }
+        startActivity(intent)
+    }
+
+    fun Activity.launchActivity(destination: Class<*>, key: String, data: Map<String,String>) {
+        val intent = Intent(this, destination::class.java)
+        if (key.isNotEmpty()) {
+            data.keys.forEach {
+                if (it.isNotEmpty()){
+                    intent.putExtra(it, data[it])
+                }
+            }
+        }
+        startActivity(intent)
+    }
+
+    fun Fragment.launchActivity(destination: Class<*>, key: String, data: Map<String,String>) {
+        val intent = Intent(requireActivity(), destination::class.java)
+        if (key.isNotEmpty()) {
+            data.keys.forEach {
+                if (it.isNotEmpty()){
+                    intent.putExtra(it, data[it])
+                }
+            }
+        }
+        startActivity(intent)
+    }
+
+
+    fun Fragment.launchActivity(destination: Class<*>, key: String, data: Parcelable? = null) {
         // Create an Intent to launch the target activity
         val intent = Intent(requireContext(), destination::class.java)
 
@@ -190,18 +237,7 @@ object ScreenExtensions {
     }
 
 
-    fun Activity.launchActivity(destination: Class<*>, key: String = "", data: String = "") {
-        // Create an Intent to launch the target activity
-        val intent = Intent(this, destination::class.java)
 
-        // Put the data into the Intent using the specified key
-        if (key.isNotEmpty()) {
-            intent.putExtra(key, data)
-        }
-
-        // Start the activity with the created Intent
-        startActivity(intent)
-    }
 
     fun Fragment.launchActivity(destination:Class<*>, key: String = "", data:String = "") {
         // Create an Intent to launch the target activity
@@ -221,8 +257,8 @@ object ScreenExtensions {
 
     // activity
     // . showToast(message: String)
-    fun Activity.showToast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    fun Activity.showToast(message: Any , length: Int = Toast.LENGTH_SHORT) {
+        Toast.makeText(this, message.toString(), Toast.LENGTH_SHORT).show()
     }
     fun ComponentActivity.getPermissionLauncher(): ActivityResultLauncher<String> {
         return this.registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
@@ -325,8 +361,8 @@ object ScreenExtensions {
 
 
     // fragments
-    fun Fragment.showToast(message: String, duration: Int = Toast.LENGTH_SHORT) {
-        Toast.makeText(requireContext(), message, duration).show()
+    fun Fragment.showToast(message: Any, duration: Int = Toast.LENGTH_SHORT) {
+        Toast.makeText(requireContext(), message.toString(), duration).show()
     }
 
     fun Fragment.navigateToFragment(frameLayoutId:Int ,fragment: Fragment, addToBackStack: Boolean = true) {

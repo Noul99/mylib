@@ -17,4 +17,6 @@ interface MainRepository {
 
     fun <T> collectAnyModel(path: String, clazz: Class<T>, numberOfItems: Int = 0): Flow<List<T>>
 
+    suspend fun <T : Any> uploadAllModelsAtOnce(path: String, models: List<T>): MyResult<String>
+
 }
